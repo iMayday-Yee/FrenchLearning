@@ -16,6 +16,12 @@ def create_app():
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     os.makedirs(app.config['AUDIO_FOLDER'], exist_ok=True)
 
+    from flask import send_from_directory
+
+    @app.route('/uploads/<path:filename>')
+    def serve_uploads(filename):
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
     from routes import register_routes
     register_routes(app)
 
@@ -23,6 +29,11 @@ def create_app():
         db.create_all()
         init_system_config(app)
         init_group_slots(app)
+
+    # 启动定时任务（debug 模式下只在 reloader 子进程中启动，避免重复）
+    if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        from services.scheduler_service import init_scheduler
+        init_scheduler(app)
 
     return app
 
@@ -42,7 +53,7 @@ def init_group_slots(app):
                 db.session.add(GroupSlot(group_type=group_type, avatar_type=avatar_type, max_count=count, current_count=0))
     db.session.commit()
 
-from models import SystemConfig, GroupSlot
+from models import SystemConfig, GroupSlot, EmailVerification
 
 if __name__ == '__main__':
     app = create_app()

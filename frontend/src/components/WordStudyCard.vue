@@ -1,13 +1,16 @@
 <template>
   <div class="word-study-card">
-    <div class="word-section">
-      <div class="word">{{ data.french }}</div>
-      <div class="meaning">{{ data.chinese }}</div>
+    <div class="word-header">
+      <div class="word-left">
+        <div class="word-french">{{ data.french }}</div>
+        <div class="word-chinese">{{ data.chinese }}</div>
+      </div>
+      <div v-if="data.phonetic" class="word-phonetic">{{ data.phonetic }}</div>
     </div>
-    <div class="action-section">
+    <div class="word-actions">
       <AudioPlayer :url="data.audio_url" :word="data.french" />
       <button
-        class="record-btn"
+        class="rec-btn"
         @mousedown="startRecording"
         @mouseup="stopRecording"
         @touchstart.prevent="startRecording"
@@ -15,7 +18,8 @@
         :class="{ recording: isRecording }"
         :disabled="disabled"
       >
-        {{ isRecording ? '⏹' : '🎤' }}
+        <svg v-if="!isRecording" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+        <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
       </button>
     </div>
   </div>
@@ -24,6 +28,9 @@
 <script setup>
 import { ref } from 'vue'
 import AudioPlayer from './AudioPlayer.vue'
+import { useToastStore } from '@/stores/toast'
+
+const toast = useToastStore()
 
 const props = defineProps({
   data: { type: Object, required: true },
@@ -31,7 +38,6 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['recorded'])
-
 const isRecording = ref(false)
 let mediaRecorder = null
 let audioChunks = []
@@ -42,21 +48,16 @@ const startRecording = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
     mediaRecorder = new MediaRecorder(stream)
     audioChunks = []
-
-    mediaRecorder.ondataavailable = (e) => {
-      audioChunks.push(e.data)
-    }
-
+    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data)
     mediaRecorder.onstop = () => {
       const blob = new Blob(audioChunks, { type: 'audio/webm' })
       emit('recorded', blob, props.data.word_index)
       stream.getTracks().forEach(track => track.stop())
     }
-
     mediaRecorder.start()
     isRecording.value = true
   } catch (e) {
-    console.error('Failed to start recording', e)
+    toast.error('无法访问麦克风，请检查权限')
   }
 }
 
@@ -70,61 +71,90 @@ const stopRecording = () => {
 
 <style scoped>
 .word-study-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  padding: 0.8rem;
-  min-width: 280px;
-  max-width: 320px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(6px);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05), 0 0 0 1px rgba(228,231,238,0.5);
+  overflow: hidden;
+  min-width: 260px;
+  max-width: 360px;
 }
-.word-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.word-header {
+  background: linear-gradient(135deg, var(--accent) 0%, #98B2F7 100%);
+  padding: 1rem 1.3rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+.word-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%);
+  pointer-events: none;
+}
+.word-left {
+  position: relative;
+}
+.word-french {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
   color: white;
-  padding: 0.8rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 0.6rem;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  line-height: 1.2;
 }
-.word {
-  font-size: 1.3rem;
-  font-weight: bold;
-  margin-bottom: 0.2rem;
+.word-phonetic {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.9);
+  position: relative;
+  white-space: nowrap;
+  text-align: right;
 }
-.meaning {
-  font-size: 0.9rem;
-  opacity: 0.9;
+.word-chinese {
+  font-size: 0.92rem;
+  color: rgba(255,255,255,0.88);
+  position: relative;
 }
-.action-section {
+.word-actions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  padding: 0.75rem;
 }
-.record-btn {
+.rec-btn {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: none;
-  background: #667eea;
-  color: white;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: all 0.2s;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+  flex-shrink: 0;
 }
-.record-btn:hover:not(:disabled) {
-  background: #5a6fd6;
+.rec-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-subtle);
 }
-.record-btn.recording {
-  background: #f5222d;
-  animation: pulse 1s infinite;
+.rec-btn.recording {
+  border-color: var(--rose);
+  background: var(--rose-subtle);
+  color: var(--rose);
+  animation: pulse-rec 1.2s infinite;
 }
-.record-btn:disabled {
-  background: #ccc;
+.rec-btn:disabled {
+  opacity: 0.35;
   cursor: not-allowed;
 }
-@keyframes pulse {
+@keyframes pulse-rec {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  50% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(240,160,176,0.12); }
 }
 </style>

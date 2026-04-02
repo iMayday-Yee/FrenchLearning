@@ -25,17 +25,12 @@ const startRecording = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
     mediaRecorder = new MediaRecorder(stream)
     audioChunks = []
-
-    mediaRecorder.ondataavailable = (e) => {
-      audioChunks.push(e.data)
-    }
-
+    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data)
     mediaRecorder.onstop = () => {
       const blob = new Blob(audioChunks, { type: 'audio/webm' })
       emit('recorded', blob)
       stream.getTracks().forEach(track => track.stop())
     }
-
     mediaRecorder.start()
     isRecording.value = true
   } catch (e) {
@@ -62,19 +57,25 @@ const stopRecording = () => {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: none;
-  background: #667eea;
-  color: white;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-secondary);
   font-size: 1.5rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease);
+}
+.record-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 .record-btn.recording {
-  background: #f5222d;
+  border-color: var(--rose);
+  background: var(--rose-subtle);
+  color: var(--rose);
   animation: pulse 1s infinite;
 }
 .record-btn.disabled {
-  background: #ccc;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 @keyframes pulse {
@@ -83,6 +84,6 @@ const stopRecording = () => {
 }
 .hint {
   font-size: 0.7rem;
-  color: #888;
+  color: var(--ink-muted);
 }
 </style>

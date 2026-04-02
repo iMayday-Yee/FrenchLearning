@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: '/api',
-  timeout: 30000,
+  timeout: 65000,
 })
 
 api.interceptors.request.use(config => {
@@ -16,11 +16,10 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   response => response.data,
   error => {
-    if (error.response?.status === 401) {
+    const url = error.config?.url || ''
+    if (error.response?.status === 401 && !url.includes('/admin') && !url.includes('/login') && !url.includes('/register')) {
       localStorage.removeItem('token')
       window.location.href = '/login'
-    } else {
-      console.error('API Error:', error.response?.data?.message || '请求失败')
     }
     return Promise.reject(error)
   }

@@ -4,6 +4,8 @@ from models import User, DailyStatus, ChatMessage, AudioRecord, AssessmentSummar
 from config import Config
 import csv
 import io
+import json
+import os
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -60,6 +62,7 @@ def get_users():
         'code': 200,
         'users': [{
             'id': u.id,
+            'email': u.email,
             'nickname': u.nickname,
             'phone': u.phone,
             'group_type': u.group_type,
@@ -111,12 +114,95 @@ def export_assessment():
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['user_id', 'nickname', 'group_type', 'avatar_type', 'vocab_score', 'pronunciation_avg', 'total_score'])
+    writer.writerow(['user_id', 'nickname', 'group_type', 'avatar_type', 'correct_count', 'total_count'])
 
     for summary, user in results:
-        writer.writerow([user.id, user.nickname, user.group_type, user.avatar_type, summary.vocab_score, summary.pronunciation_avg, summary.total_score])
+        writer.writerow([user.id, user.nickname, user.group_type, user.avatar_type, summary.correct_count, summary.total_count])
 
     return Response(output.getvalue(), mimetype='text/csv', headers={'Content-Disposition': 'attachment; filename=assessment_export.csv'})
+
+@admin_bp.route('/admin/words', methods=['GET'])
+@admin_required
+def get_words():
+    """获取所有天的单词数据"""
+    words_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'words.json')
+    with open(words_file, 'r', encoding='utf-8') as f:
+        words_data = json.load(f)
+    return jsonify({'code': 200, 'words': words_data})
+
+
+@admin_bp.route('/admin/words/<int:day>', methods=['PUT'])
+@admin_required
+def update_words(day):
+    """更新某天的单词数据"""
+    if day < 1 or day > 10:
+        return jsonify({'code': 400, 'message': '天数必须在1-10之间'}), 400
+
+    data = request.get_json()
+    words = data.get('words', [])
+
+    if len(words) != 3:
+        return jsonify({'code': 400, 'message': '每天必须有3个单词'}), 400
+
+    for i, w in enumerate(words):
+        if not w.get('french') or not w.get('chinese'):
+            return jsonify({'code': 400, 'message': f'第{i+1}个单词缺少法语或中文'}), 400
+        w['index'] = i + 1
+        if not w.get('audio'):
+            w['audio'] = f"day{day}/{day}-{i+1}.mp3"
+
+    words_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'words.json')
+    with open(words_file, 'r', encoding='utf-8') as f:
+        all_words = json.load(f)
+
+    day_entry = next((d for d in all_words if d['day'] == day), None)
+    if day_entry:
+        day_entry['words'] = words
+    else:
+        all_words.append({'day': day, 'words': words})
+        all_words.sort(key=lambda x: x['day'])
+
+    with open(words_file, 'w', encoding='utf-8') as f:
+        json.dump(all_words, f, ensure_ascii=False, indent=2)
+
+    return jsonify({'code': 200, 'message': f'第{day}天单词已更新'})
+
+
+@admin_bp.route('/admin/words/<int:day>/audio', methods=['POST'])
+@admin_required
+def upload_word_audio(day):
+    """上传单词音频"""
+    if day < 1 or day > 10:
+        return jsonify({'code': 400, 'message': '天数必须在1-10之间'}), 400
+
+    if 'audio' not in request.files:
+        return jsonify({'code': 400, 'message': '没有音频文件'}), 400
+
+    word_index = request.form.get('word_index', type=int)
+    if not word_index or word_index < 1 or word_index > 3:
+        return jsonify({'code': 400, 'message': 'word_index必须在1-3之间'}), 400
+
+    audio_file = request.files['audio']
+    audio_dir = os.path.join(Config.AUDIO_FOLDER, f'day{day}')
+    os.makedirs(audio_dir, exist_ok=True)
+
+    filename = f"{day}-{word_index}.mp3"
+    filepath = os.path.join(audio_dir, filename)
+    audio_file.save(filepath)
+
+    return jsonify({'code': 200, 'message': '音频上传成功', 'audio_path': f'day{day}/{filename}'})
+
+
+@admin_bp.route('/admin/config', methods=['GET'])
+@admin_required
+def get_config():
+    """获取系统配置"""
+    start_date = db.session.get(SystemConfig, 'study_start_date')
+    return jsonify({
+        'code': 200,
+        'study_start_date': start_date.value if start_date else ''
+    })
+
 
 @admin_bp.route('/admin/config', methods=['POST'])
 @admin_required

@@ -33,7 +33,7 @@ def get_today_status(user_id, study_day):
 @jwt_required()
 def get_status():
     """获取当前学习状态"""
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = db.session.get(User, user_id)
 
     study_day = get_study_day(user_id)
@@ -76,7 +76,7 @@ def get_status():
 @jwt_required()
 def study_enter():
     """用户进入/重新进入应用事件"""
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = db.session.get(User, user_id)
     study_day = get_study_day(user_id)
 
@@ -149,6 +149,7 @@ def study_enter():
                 card_content = json.dumps({
                     "french": word['french'],
                     "chinese": word['chinese'],
+                    "phonetic": word.get('phonetic', ''),
                     "audio_url": audio_path,
                     "word_index": i
                 })
@@ -157,6 +158,7 @@ def study_enter():
                     "content": {
                         "french": word['french'],
                         "chinese": word['chinese'],
+                        "phonetic": word.get('phonetic', ''),
                         "audio_url": audio_path,
                         "word_index": i
                     }
@@ -165,7 +167,7 @@ def study_enter():
                 msg = ChatMessage(user_id=user_id, study_day=study_day, role='assistant',
                                   content_type='word_audio', content=card_content)
                 db.session.add(msg)
-            end_content = "以上是今天的3个单词，请跟着音频练习发音吧！点击每个单词旁边的🎤按钮录制你的跟读。"
+            end_content = "以上是今天的3个单词，请跟着音频练习发音吧！点击每个单词旁边的🎤按钮录制你的跟读。可以多跟读几次哦。"
             messages.append({"type": "text", "content": end_content})
             msg = ChatMessage(user_id=user_id, study_day=study_day, role='assistant',
                               content_type='text', content=end_content)

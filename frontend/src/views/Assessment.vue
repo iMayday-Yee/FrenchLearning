@@ -1,15 +1,21 @@
 <template>
   <div class="assessment-page">
     <div class="container">
+      <div v-if="loading" class="state-msg fade-up">
+        <span class="tag">Évaluation</span>
+        <p>加载中...</p>
+      </div>
       <AssessmentQuestion
-        v-if="currentQuestion"
+        v-else-if="currentQuestion"
         :question="currentQuestion"
         :current="currentIndex"
         :total="questions.length"
         @answered="handleAnswer"
       />
-      <div v-else-if="loading" class="loading">加载中...</div>
-      <div v-else class="complete">测评已完成</div>
+      <div v-else class="state-msg fade-up">
+        <span class="tag">Terminé</span>
+        <p>测评已完成</p>
+      </div>
     </div>
   </div>
 </template>
@@ -18,14 +24,15 @@
 import { ref, onMounted } from 'vue'
 import { api } from '@/api'
 import { useRouter } from 'vue-router'
+import { useToastStore } from '@/stores/toast'
 import AssessmentQuestion from '@/components/AssessmentQuestion.vue'
 
 const router = useRouter()
+const toast = useToastStore()
 const loading = ref(true)
 const questions = ref([])
 const currentIndex = ref(0)
 const answers = ref([])
-
 const currentQuestion = ref(null)
 
 const loadQuestions = async () => {
@@ -34,7 +41,7 @@ const loadQuestions = async () => {
     questions.value = res.questions
     currentQuestion.value = questions.value[0]
   } catch (e) {
-    console.error('Failed to load questions', e)
+    toast.error('题目加载失败，请刷新页面重试')
   } finally {
     loading.value = false
   }
@@ -42,7 +49,6 @@ const loadQuestions = async () => {
 
 const handleAnswer = async (answer) => {
   answers.value.push(answer)
-
   if (currentIndex.value < questions.value.length - 1) {
     currentIndex.value++
     currentQuestion.value = questions.value[currentIndex.value]
@@ -56,7 +62,7 @@ const submitAssessment = async () => {
     await api.post('/assessment/submit', { answers: answers.value })
     router.push('/result')
   } catch (e) {
-    console.error('Failed to submit', e)
+    toast.error('提交失败，请重试')
   }
 }
 
@@ -66,19 +72,33 @@ onMounted(loadQuestions)
 <style scoped>
 .assessment-page {
   min-height: 100vh;
-  background: #f5f5f5;
-  padding-top: 2rem;
+  background: var(--bg);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 1rem;
 }
 .container {
-  max-width: 400px;
-  margin: 0 auto;
-  background: white;
-  min-height: calc(100vh - 4rem);
-  border-radius: 16px 16px 0 0;
+  max-width: 420px;
+  width: 100%;
 }
-.loading, .complete {
+.state-msg {
   text-align: center;
-  padding: 3rem;
-  color: #888;
+  padding: 4rem 2rem;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow);
+}
+.state-msg .tag {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+}
+.state-msg p {
+  color: var(--ink-muted);
+  margin-top: 0.5rem;
 }
 </style>

@@ -18,7 +18,7 @@ def load_words_json():
 @jwt_required()
 def check_assessment():
     """检查是否需要/可以进行测评"""
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
 
     existing = AssessmentSummary.query.filter_by(user_id=user_id).first()
     if existing:
@@ -69,7 +69,7 @@ def get_questions():
 @jwt_required()
 def submit_assessment():
     """提交测评答案"""
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     data = request.get_json()
     answers = data.get('answers', [])
 
@@ -83,46 +83,36 @@ def submit_assessment():
     total_count = len(answers)
 
     for answer in answers:
-        question_id = answer['question_id']
+        french_word = answer.get('french', '')
         user_choice = answer['user_choice']
 
-        questions_res = get_questions()
-        question = next((q for q in questions_res.json['questions'] if q['id'] == question_id), None)
-        if not question:
-            continue
+        correct_chinese = word_map.get(french_word, '')
+        is_correct = user_choice == correct_chinese
 
-        correct = question['options'][question['options'].index(user_choice)] == user_choice
-
-        if correct:
+        if is_correct:
             correct_count += 1
 
         record = AssessmentAnswer(
             user_id=user_id,
-            word_french=question['french'],
-            correct_chinese=word_map.get(question['french'], ''),
+            word_french=french_word,
+            correct_chinese=correct_chinese,
             user_choice=user_choice,
-            is_correct=correct
+            is_correct=is_correct
         )
         db.session.add(record)
 
     db.session.commit()
 
-    vocab_score = (correct_count / total_count) * 100 if total_count > 0 else 0
-
     summary = AssessmentSummary(
         user_id=user_id,
-        vocab_score=vocab_score,
-        pronunciation_avg=None,
-        total_score=vocab_score
+        correct_count=correct_count,
+        total_count=total_count
     )
     db.session.add(summary)
     db.session.commit()
 
     return jsonify({
         'code': 200,
-        'vocab_score': round(vocab_score, 1),
-        'pronunciation_avg': None,
-        'total_score': round(vocab_score, 1),
         'correct_count': correct_count,
         'total_count': total_count
     })
@@ -131,7 +121,7 @@ def submit_assessment():
 @jwt_required()
 def get_result():
     """获取测评结果"""
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     summary = AssessmentSummary.query.filter_by(user_id=user_id).first()
 
     if not summary:
@@ -139,7 +129,6 @@ def get_result():
 
     return jsonify({
         'code': 200,
-        'vocab_score': summary.vocab_score,
-        'pronunciation_avg': summary.pronunciation_avg,
-        'total_score': summary.total_score
+        'correct_count': summary.correct_count,
+        'total_count': summary.total_count
     })

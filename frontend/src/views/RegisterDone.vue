@@ -1,11 +1,16 @@
 <template>
   <div class="done-page">
-    <div class="container">
-      <div class="icon">✓</div>
+    <div class="card fade-up">
+      <div class="icon-wrap">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <span class="tag">Bienvenue</span>
       <h2>注册完成</h2>
-      <p class="message">您的账号已创建成功！</p>
-      <p class="date">学习将于 <strong>{{ studyStartDate }}</strong> 开始</p>
-      <p class="tip">届时请打开本页面开始学习</p>
+      <p>您的账号已创建成功</p>
+      <div class="date-card">
+        学习将于 <strong>{{ studyStartDate }}</strong> 开始
+      </div>
+      <p class="tip">届时请打开应用开始学习</p>
       <button class="btn-login" @click="goLogin">前往登录</button>
     </div>
   </div>
@@ -16,13 +21,8 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const studyStartDate = computed(() => {
-  return localStorage.getItem('study_start_date') || '待定'
-})
-
-const goLogin = () => {
-  router.push('/login')
-}
+const studyStartDate = computed(() => localStorage.getItem('study_start_date') || '待定')
+const goLogin = () => router.push('/login')
 </script>
 
 <style scoped>
@@ -31,44 +31,70 @@ const goLogin = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--bg);
+  padding: 2rem;
 }
-.container {
-  background: white;
-  padding: 3rem 2rem;
-  border-radius: 16px;
+.card {
+  background: var(--surface);
+  padding: 3rem 2.5rem;
+  border-radius: var(--radius-lg);
   text-align: center;
-  max-width: 400px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
 }
-.icon {
-  width: 80px;
-  height: 80px;
-  background: #52c41a;
-  color: white;
-  font-size: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1.5rem;
+.icon-wrap {
+  color: var(--sage);
+  margin-bottom: 1rem;
 }
-h2 { margin-bottom: 1rem; }
-.message { color: #333; margin-bottom: 0.5rem; }
-.date {
-  background: #f0f5ff;
-  padding: 0.8rem;
-  border-radius: 8px;
-  margin: 1rem 0;
-  color: #333;
+.tag {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--accent);
+  letter-spacing: 0.1em;
 }
-.tip { color: #888; font-size: 0.9rem; margin-bottom: 1.5rem; }
+h2 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0.3rem 0 0.5rem;
+}
+p {
+  font-size: 0.9rem;
+  color: var(--ink-secondary);
+}
+.date-card {
+  background: var(--accent-subtle);
+  padding: 0.9rem 1.2rem;
+  border-radius: var(--radius);
+  margin: 1.2rem 0;
+  font-size: 0.9rem;
+  color: var(--ink-secondary);
+  border: 1px solid rgba(123,155,244,0.12);
+}
+.date-card strong { color: var(--ink); }
+.tip {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
 .btn-login {
-  background: #667eea;
-  color: white;
+  width: 100%;
+  padding: 0.85rem;
+  background: var(--accent);
+  color: var(--ink-on-dark);
   border: none;
-  padding: 0.8rem 2rem;
-  border-radius: 8px;
-  font-size: 1rem;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s var(--ease);
+}
+.btn-login:hover {
+  background: var(--accent);
+  transform: translateY(-1px);
 }
 </style>

@@ -49,19 +49,20 @@ def build_material_messages(words, base_url=''):
             "content": {
                 "french": word['french'],
                 "chinese": word['chinese'],
+                "phonetic": word.get('phonetic', ''),
                 "audio_url": audio_path,
                 "word_index": i
             }
         })
 
-    messages.append({"type": "text", "content": "以上是今天的3个单词，请跟着音频练习发音吧！点击每个单词旁边的🎤按钮录制你的跟读。"})
+    messages.append({"type": "text", "content": "以上是今天的3个单词，请跟着音频练习发音吧！点击每个单词旁边的🎤按钮录制你的跟读。可以多跟读几次哦。"})
     return messages
 
 @chat_bp.route('/chat/send', methods=['POST'])
 @jwt_required()
 def send_message():
     """发送聊天消息"""
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = db.session.get(User, user_id)
     study_day = get_study_day(user_id)
 
@@ -99,7 +100,7 @@ def send_message():
     raw_response = call_llm(messages)
 
     if not raw_response:
-        llm_reply = "抱歉，服务出现问题，请稍后重试。"
+        llm_reply = "对话超时了，请重新发送试试。"
         parsed = {"intent": "other", "reply": llm_reply}
     else:
         parsed = parse_llm_response(raw_response)
@@ -157,6 +158,7 @@ def send_message():
 
     elif intent == 'reject_learning':
         today_status.rejected = True
+        today_status.invitation_sent = False
         db.session.commit()
 
     elif intent == 'follow_up_practice':
@@ -190,7 +192,7 @@ def send_message():
 @jwt_required()
 def get_history():
     """获取聊天记录"""
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     study_day = get_study_day(user_id)
     day = request.args.get('day', type=int) or study_day
 
@@ -221,7 +223,7 @@ def get_history():
 @jwt_required()
 def upload_audio():
     """上传跟读录音"""
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     study_day = get_study_day(user_id)
 
     if study_day < 1 or study_day > 10:
@@ -240,6 +242,18 @@ def upload_audio():
     os.makedirs(user_dir, exist_ok=True)
     filepath = os.path.join(user_dir, filename)
     audio_file.save(filepath)
+
+    # 保存用户录音消息到聊天记录
+    audio_url = f"/uploads/{user_id}/{study_day}/{filename}"
+    user_audio_msg = ChatMessage(
+        user_id=user_id,
+        study_day=study_day,
+        role='user',
+        content_type='user_audio',
+        content=audio_url
+    )
+    db.session.add(user_audio_msg)
+    db.session.commit()
 
     from services.audio_service import validate_audio
     is_valid, reason = validate_audio(filepath)
@@ -298,7 +312,7 @@ def upload_audio():
         parsed = parse_llm_response(raw_response)
         reply_text = parsed.get('reply', '练习得不错！继续加油！')
     else:
-        reply_text = '练习得不错！继续加油！'
+        reply_text = '对话超时了，请重新录制试试。'
 
     assistant_msg = ChatMessage(
         user_id=user_id,

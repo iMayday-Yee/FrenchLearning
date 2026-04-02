@@ -44,10 +44,11 @@ instance/
 *.swp
 *.swo
 *~
-.DS_Store
 .project
 .pydevproject
 .settings/
+*.sublime-project
+*.sublime-workspace
 
 # Node
 node_modules/
@@ -55,35 +56,28 @@ npm-debug.log
 yarn-error.log
 yarn-debug.log*
 lerna-debug.log*
-dist/
 frontend/dist/
 
-# Environment variables
+# Environment variables & config
 .env
 .env.local
 .env.*.local
-config.py  # 注意：如果包含敏感信息，谨慎上传
+.env.test
+backend/config.py
 
 # Logs
 logs/
 *.log
 /tmp/
-/logs/
 
 # OS
-Thumbs.db
 .DS_Store
+Thumbs.db
 .AppleDouble
 .LSOverride
 ._*
 
-# IDE specific files
-*.sublime-project
-*.sublime-workspace
-.vscode
-.idea
-
-# Uploads and temp files
+# Uploads
 uploads/
 backend/uploads/
 
@@ -102,6 +96,3 @@ frontend/.vite_build/
 
 # Misc
 .cache/
-.env.test
-debug.log
-backend/config.py

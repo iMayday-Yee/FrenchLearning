@@ -1,24 +1,56 @@
+import re
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from extensions import db
+from extensions import db, limiter
 from models import User
 from services.group_service import assign_group
+from services.email_service import send_verification_email, verify_code
 
 auth_bp = Blueprint('auth', __name__)
+
+EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
+
+@auth_bp.route('/send-verification-code', methods=['POST'])
+@limiter.limit("30 per hour")
+def send_code():
+    """发送邮箱验证码"""
+    data = request.get_json()
+    email = (data.get('email') or '').strip().lower()
+
+    if not email or not EMAIL_RE.match(email):
+        return jsonify({'code': 400, 'message': '请输入有效的邮箱地址'}), 400
+
+    if User.query.filter_by(email=email).first():
+        return jsonify({'code': 400, 'message': '该邮箱已注册'}), 400
+
+    success, message = send_verification_email(email)
+    if not success:
+        return jsonify({'code': 400, 'message': message}), 400
+
+    return jsonify({'code': 200, 'message': message})
+
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
     """用户注册接口"""
     data = request.get_json()
 
-    required = ['phone', 'password', 'nickname', 'age', 'gender', 'education', 'french_interest', 'french_level', 'study_time_slot']
+    required = ['email', 'email_code', 'phone', 'password', 'nickname', 'age', 'gender', 'education', 'french_interest', 'french_level', 'study_time_slot']
     for field in required:
         if not data.get(field):
             return jsonify({'code': 400, 'message': f'缺少必填字段: {field}'}), 400
 
-    if User.query.filter_by(phone=data['phone']).first():
-        return jsonify({'code': 400, 'message': '手机号已注册'}), 400
+    email = data['email'].strip().lower()
+
+    # 验证邮箱验证码
+    ok, msg = verify_code(email, data['email_code'])
+    if not ok:
+        return jsonify({'code': 400, 'message': msg}), 400
+
+    if User.query.filter_by(email=email).first():
+        return jsonify({'code': 400, 'message': '该邮箱已注册'}), 400
 
     try:
         group_type, avatar_type = assign_group(db)
@@ -26,8 +58,8 @@ def register():
         return jsonify({'code': 500, 'message': str(e)}), 500
 
     user = User(
+        email=email,
         phone=data['phone'],
-        email=data.get('email'),
         password_hash=generate_password_hash(data['password']),
         nickname=data['nickname'],
         age=data['age'],
@@ -42,30 +74,34 @@ def register():
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({'code': 200, 'user_id': user.id, 'message': '注册成功'})
+    from models import SystemConfig
+    start_date = db.session.get(SystemConfig, 'study_start_date')
+    return jsonify({'code': 200, 'user_id': user.id, 'study_start_date': start_date.value if start_date else '', 'message': '注册成功'})
+
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
     """用户登录接口"""
     data = request.get_json()
-    phone = data.get('phone')
+    email = (data.get('email') or '').strip().lower()
     password = data.get('password')
 
-    if not phone or not password:
-        return jsonify({'code': 400, 'message': '手机号和密码不能为空'}), 400
+    if not email or not password:
+        return jsonify({'code': 400, 'message': '邮箱和密码不能为空'}), 400
 
-    user = User.query.filter_by(phone=phone).first()
+    user = User.query.filter_by(email=email).first()
     if not user or not check_password_hash(user.password_hash, password):
-        return jsonify({'code': 401, 'message': '手机号或密码错误'}), 401
+        return jsonify({'code': 401, 'message': '邮箱或密码错误'}), 401
 
-    token = create_access_token(identity=user.id)
+    token = create_access_token(identity=str(user.id))
     return jsonify({'code': 200, 'token': token, 'user_id': user.id})
+
 
 @auth_bp.route('/user/profile', methods=['GET'])
 @jwt_required()
 def get_profile():
     """获取用户信息接口"""
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = db.session.get(User, user_id)
     if not user:
         return jsonify({'code': 404, 'message': '用户不存在'}), 404

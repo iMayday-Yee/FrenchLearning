@@ -1,16 +1,20 @@
 <template>
   <div class="bind-page">
-    <div class="container">
-      <h2>绑定微信</h2>
-      <p class="desc">请使用微信扫描下方二维码关注公众号，以便接收学习提醒</p>
+    <div class="card fade-up">
+      <span class="tag">WeChat</span>
+      <h2>绑定微信公众号</h2>
+      <p class="desc">扫描二维码关注公众号，接收每日学习提醒</p>
 
-      <div class="qrcode-container" v-if="!bound">
+      <div class="qrcode-area" v-if="!bound">
         <img v-if="qrcodeImage" :src="qrcodeImage" alt="微信二维码">
-        <div v-else class="loading">加载中...</div>
+        <div v-else class="loading-placeholder">
+          <span class="spinner"></span>
+        </div>
       </div>
 
-      <div v-if="bound" class="success">
-        <p>绑定成功！</p>
+      <div v-if="bound" class="success-msg">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        绑定成功
       </div>
 
       <div class="actions">
@@ -25,8 +29,10 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { api } from '@/api'
 import { useRouter } from 'vue-router'
+import { useToastStore } from '@/stores/toast'
 
 const router = useRouter()
+const toast = useToastStore()
 const qrcodeImage = ref('')
 const bound = ref(false)
 const userId = localStorage.getItem('pending_user_id')
@@ -35,119 +41,114 @@ let pollInterval = null
 const loadQRCode = async () => {
   try {
     const res = await api.get(`/get_bind_qrcode?user_id=${userId}`)
-    if (res.code === 200) {
-      qrcodeImage.value = res.qrcode_image
-    }
-  } catch (e) {
-    console.error('Failed to load QR code', e)
-  }
+    if (res.code === 200) qrcodeImage.value = res.qrcode_image
+  } catch (e) { toast.error('二维码加载失败，可跳过此步') }
 }
 
-const checkBind = async () => {
-  try {
-    const res = await api.get(`/bindcheck?user_id=${userId}`)
-    if (res.bound) {
-      bound.value = true
-      stopPoll()
-      setTimeout(() => router.push('/agreement'), 1000)
-    }
-  } catch (e) {
-    console.error('Bind check failed', e)
-  }
-}
-
-const skipBind = () => {
-  stopPoll()
-  router.push('/agreement')
-}
-
-const goNext = () => {
-  stopPoll()
-  router.push('/agreement')
-}
-
-const stopPoll = () => {
-  if (pollInterval) {
-    clearInterval(pollInterval)
-    pollInterval = null
-  }
-}
+const skipBind = () => { stopPoll(); router.push('/agreement') }
+const goNext = () => { stopPoll(); router.push('/agreement') }
+const stopPoll = () => { if (pollInterval) { clearInterval(pollInterval); pollInterval = null } }
 
 onMounted(() => {
-  if (!userId) {
-    router.push('/register')
-    return
-  }
+  if (!userId) { router.push('/register'); return }
   loadQRCode()
-
-  // 轮询间隔改为10秒，减少API请求
   pollInterval = setInterval(async () => {
     try {
       const res = await api.get(`/bindcheck?user_id=${userId}`)
-      if (res.bound) {
-        bound.value = true
-        stopPoll()
-        setTimeout(() => router.push('/agreement'), 1000)
-      }
-    } catch (e) {
-      // 429错误时停止轮询
-      if (e.response?.status === 429) {
-        stopPoll()
-      }
-    }
+      if (res.bound) { bound.value = true; stopPoll(); setTimeout(() => router.push('/agreement'), 1000) }
+    } catch (e) { if (e.response?.status === 429) stopPoll() }
   }, 10000)
-
-  // 最多轮询18次（3分钟后停止）
   setTimeout(() => stopPoll(), 180000)
 })
-
-onUnmounted(() => {
-  stopPoll()
-})
+onUnmounted(() => stopPoll())
 </script>
 
 <style scoped>
 .bind-page {
   min-height: 100vh;
   padding: 2rem;
-  background: #f5f5f5;
+  background: var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.container {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
+.card {
+  background: var(--surface);
+  padding: 2.5rem 2rem;
+  border-radius: var(--radius-lg);
   text-align: center;
   max-width: 400px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
 }
-h2 { margin-bottom: 0.5rem; }
-.desc { color: #666; margin-bottom: 1.5rem; font-size: 0.9rem; }
-.qrcode-container {
-  margin: 1rem auto;
+.tag {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--accent);
+  letter-spacing: 0.1em;
 }
-.qrcode-container img {
+h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0.3rem 0 0.5rem;
+}
+.desc { color: var(--ink-muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+.qrcode-area {
+  margin: 0 auto 1.5rem;
   width: 200px;
   height: 200px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.loading { padding: 50px; color: #999; }
-.success { color: #52c41a; padding: 1rem; }
-.actions { margin-top: 1.5rem; }
+.qrcode-area img { width: 100%; height: 100%; object-fit: contain; }
+.loading-placeholder { color: var(--ink-faint); }
+.spinner {
+  display: inline-block;
+  width: 24px; height: 24px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.success-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--sage);
+  font-weight: 600;
+  padding: 1rem;
+}
+.actions { margin-top: 1rem; }
 .btn-skip {
-  background: none;
-  border: 1px solid #ddd;
+  background: transparent;
+  border: 1px solid var(--border);
   padding: 0.6rem 1.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius);
   cursor: pointer;
-  color: #666;
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  transition: all 0.2s;
 }
+.btn-skip:hover { border-color: var(--ink-muted); color: var(--ink); }
 .btn-next {
-  background: #667eea;
-  color: white;
+  background: var(--accent);
+  color: var(--ink-on-dark);
   border: none;
-  padding: 0.6rem 2rem;
-  border-radius: 6px;
+  padding: 0.7rem 2rem;
+  border-radius: var(--radius);
   cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
 }
+.btn-next:hover { background: var(--accent); }
 </style>
