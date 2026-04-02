@@ -1,0 +1,12 @@
+[
+  {"day": 1, "words": [{"index": 1, "french": "bonjour", "chinese": "你好", "audio": "day1/1-1.mp3"}, {"index": 2, "french": "merci", "chinese": "谢谢", "audio": "day1/1-2.mp3"}, {"index": 3, "french": "au revoir", "chinese": "再见", "audio": "day1/1-3.mp3"}]},
+  {"day": 2, "words": [{"index": 1, "french": "salut", "chinese": "你好/再见", "audio": "day2/2-1.mp3"}, {"index": 2, "french": "oui", "chinese": "是", "audio": "day2/2-2.mp3"}, {"index": 3, "french": "non", "chinese": "不", "audio": "day2/2-3.mp3"}]},
+  {"day": 3, "words": [{"index": 1, "french": "bonne nuit", "chinese": "晚安", "audio": "day3/3-1.mp3"}, {"index": 2, "french": "s'il vous plaît", "chinese": "请", "audio": "day3/3-2.mp3"}, {"index": 3, "french": "excusez-moi", "chinese": "对不起/打扰一下", "audio": "day3/3-3.mp3"}]},
+  {"day": 4, "words": [{"index": 1, "french": "comment allez-vous", "chinese": "你好吗", "audio": "day4/4-1.mp3"}, {"index": 2, "french": "très bien", "chinese": "很好", "audio": "day4/4-2.mp3"}, {"index": 3, "french": "je m'appelle", "chinese": "我叫", "audio": "day4/4-3.mp3"}]},
+  {"day": 5, "words": [{"index": 1, "french": "enchanté", "chinese": "很高兴认识你", "audio": "day5/5-1.mp3"}, {"index": 2, "french": "où", "chinese": "哪里", "audio": "day5/5-2.mp3"}, {"index": 3, "french": "ici", "chinese": "这里", "audio": "day5/5-3.mp3"}]},
+  {"day": 6, "words": [{"index": 1, "french": "maison", "chinese": "房子", "audio": "day6/6-1.mp3"}, {"index": 2, "french": "travail", "chinese": "工作", "audio": "day6/6-2.mp3"}, {"index": 3, "french": "famille", "chinese": "家庭", "audio": "day6/6-3.mp3"}]},
+  {"day": 7, "words": [{"index": 1, "french": "ami", "chinese": "朋友", "audio": "day7/7-1.mp3"}, {"index": 2, "french": "amour", "chinese": "爱", "audio": "day7/7-2.mp3"}, {"index": 3, "french": "temps", "chinese": "时间/天气", "audio": "day7/7-3.mp3"}]},
+  {"day": 8, "words": [{"index": 1, "french": "jour", "chinese": "天", "audio": "day8/8-1.mp3"}, {"index": 2, "french": "mois", "chinese": "月", "audio": "day8/8-2.mp3"}, {"index": 3, "french": "année", "chinese": "年", "audio": "day8/8-3.mp3"}]},
+  {"day": 9, "words": [{"index": 1, "french": "eau", "chinese": "水", "audio": "day9/9-1.mp3"}, {"index": 2, "french": "pain", "chinese": "面包", "audio": "day9/9-2.mp3"}, {"index": 3, "french": "vin", "chinese": "葡萄酒", "audio": "day9/9-3.mp3"}]},
+  {"day": 10, "words": [{"index": 1, "french": "livre", "chinese": "书", "audio": "day10/10-1.mp3"}, {"index": 2, "french": "stylo", "chinese": "笔", "audio": "day10/10-2.mp3"}, {"index": 3, "french": "papier", "chinese": "纸", "audio": "day10/10-3.mp3"}]}
+]
