@@ -52,12 +52,7 @@ const handleLogin = async () => {
     if (res.code === 200) {
       await userStore.setLogin(res)
       await userStore.fetchProfile()
-      const studyStore = (await import('@/stores/study')).useStudyStore()
-      await studyStore.fetchStatus()
-      if (studyStore.phase === 'not_started') router.push('/waiting')
-      else if (studyStore.phase === 'completed') router.push('/completed')
-      else if (studyStore.needAssessment) router.push('/assessment')
-      else router.push('/chat')
+      router.push('/home')
     }
   } catch (e) {
     const msg = e.response?.data?.message
