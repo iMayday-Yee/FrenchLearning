@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, Response
 from extensions import db
-from models import User, DailyStatus, ChatMessage, AudioRecord, AssessmentSummary, GroupSlot, SystemConfig
+from models import User, DailyStatus, ChatMessage, AudioRecord, AssessmentSummary, GroupSlot, SystemConfig, WechatAccount
 from config import Config
 import csv
 import io
@@ -296,3 +296,100 @@ def update_config():
         db.session.commit()
 
     return jsonify({'code': 200, 'message': 'Config updated'})
+
+
+@admin_bp.route('/admin/wechat_accounts', methods=['GET'])
+@admin_required
+def get_wechat_accounts():
+    """获取所有公众号及绑定统计"""
+    accounts = WechatAccount.query.order_by(WechatAccount.id).all()
+    result = []
+    for acc in accounts:
+        bound_count = User.query.filter_by(wechat_account_index=acc.id).filter(User.wechat_openid.isnot(None)).count()
+        result.append({
+            'id': acc.id,
+            'app_id': acc.app_id[:8] + '...' if len(acc.app_id) > 8 else acc.app_id,
+            'app_id_full': acc.app_id,
+            'app_secret': acc.app_secret,
+            'token': acc.token,
+            'template_id': acc.template_id,
+            'max_bindable': acc.max_bindable,
+            'bound_count': bound_count,
+            'remark': acc.remark,
+            'enabled': acc.enabled
+        })
+    return jsonify({'code': 200, 'accounts': result})
+
+
+@admin_bp.route('/admin/wechat_accounts', methods=['POST'])
+@admin_required
+def add_wechat_account():
+    """添加公众号"""
+    data = request.get_json()
+    if not data.get('app_id') or not data.get('app_secret'):
+        return jsonify({'code': 400, 'message': 'app_id 和 app_secret 必填'}), 400
+
+    acc = WechatAccount(
+        app_id=data['app_id'],
+        app_secret=data['app_secret'],
+        token=data.get('token', ''),
+        template_id=data.get('template_id', ''),
+        max_bindable=data.get('max_bindable', 19),
+        remark=data.get('remark', ''),
+        enabled=data.get('enabled', True)
+    )
+    db.session.add(acc)
+    db.session.commit()
+    return jsonify({'code': 200, 'message': '添加成功', 'id': acc.id})
+
+
+@admin_bp.route('/admin/wechat_accounts/<int:account_id>', methods=['PUT'])
+@admin_required
+def update_wechat_account(account_id):
+    """编辑公众号"""
+    acc = db.session.get(WechatAccount, account_id)
+    if not acc:
+        return jsonify({'code': 404, 'message': '公众号不存在'}), 404
+
+    data = request.get_json()
+    if 'app_id' in data: acc.app_id = data['app_id']
+    if 'app_secret' in data: acc.app_secret = data['app_secret']
+    if 'token' in data: acc.token = data['token']
+    if 'template_id' in data: acc.template_id = data['template_id']
+    if 'max_bindable' in data: acc.max_bindable = data['max_bindable']
+    if 'remark' in data: acc.remark = data['remark']
+    if 'enabled' in data: acc.enabled = data['enabled']
+    db.session.commit()
+    return jsonify({'code': 200, 'message': '更新成功'})
+
+
+@admin_bp.route('/admin/wechat_accounts/<int:account_id>', methods=['DELETE'])
+@admin_required
+def delete_wechat_account(account_id):
+    """删除公众号（仅允许无绑定用户时）"""
+    acc = db.session.get(WechatAccount, account_id)
+    if not acc:
+        return jsonify({'code': 404, 'message': '公众号不存在'}), 404
+
+    bound_count = User.query.filter_by(wechat_account_index=acc.id).filter(User.wechat_openid.isnot(None)).count()
+    if bound_count > 0:
+        return jsonify({'code': 400, 'message': f'该公众号下还有 {bound_count} 个绑定用户，无法删除'}), 400
+
+    db.session.delete(acc)
+    db.session.commit()
+    return jsonify({'code': 200, 'message': '删除成功'})
+
+
+@admin_bp.route('/admin/wechat_accounts/<int:account_id>/users', methods=['GET'])
+@admin_required
+def get_wechat_account_users(account_id):
+    """获取该公众号下绑定的用户列表"""
+    acc = db.session.get(WechatAccount, account_id)
+    if not acc:
+        return jsonify({'code': 404, 'message': '公众号不存在'}), 404
+
+    users = User.query.filter_by(wechat_account_index=account_id).filter(User.wechat_openid.isnot(None)).all()
+    return jsonify({
+        'code': 200,
+        'users': [{'id': u.id, 'nickname': u.nickname, 'email': u.email} for u in users]
+    })

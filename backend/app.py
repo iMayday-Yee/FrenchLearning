@@ -29,6 +29,7 @@ def create_app():
         db.create_all()
         init_system_config(app)
         init_group_slots(app)
+        init_wechat_accounts(app)
 
     # 启动定时任务（debug 模式下只在 reloader 子进程中启动，避免重复）
     if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
@@ -53,7 +54,22 @@ def init_group_slots(app):
                 db.session.add(GroupSlot(group_type=group_type, avatar_type=avatar_type, max_count=count, current_count=0))
     db.session.commit()
 
-from models import SystemConfig, GroupSlot, EmailVerification
+def init_wechat_accounts(app):
+    from models import WechatAccount
+    if WechatAccount.query.count() == 0:
+        accounts = app.config.get('WECHAT_ACCOUNTS', [])
+        for i, acc in enumerate(accounts):
+            if acc.get('app_id'):
+                db.session.add(WechatAccount(
+                    app_id=acc['app_id'],
+                    app_secret=acc['app_secret'],
+                    token=acc.get('token', ''),
+                    template_id=acc.get('template_id', ''),
+                    remark=f'初始账号{i+1}'
+                ))
+        db.session.commit()
+
+from models import SystemConfig, GroupSlot, EmailVerification, WechatAccount
 
 if __name__ == '__main__':
     app = create_app()

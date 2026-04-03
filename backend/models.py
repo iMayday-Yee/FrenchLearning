@@ -99,3 +99,14 @@ class EmailVerification(db.Model):
     code = db.Column(db.String(6), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     used = db.Column(db.Boolean, default=False)
+
+class WechatAccount(db.Model):
+    __tablename__ = 'wechat_accounts'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    app_id = db.Column(db.String(100), nullable=False)
+    app_secret = db.Column(db.String(100), nullable=False)
+    token = db.Column(db.String(100), nullable=False)
+    template_id = db.Column(db.String(200), default='')
+    max_bindable = db.Column(db.Integer, default=19)
+    remark = db.Column(db.String(100), default='')
+    enabled = db.Column(db.Boolean, default=True)

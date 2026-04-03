@@ -147,6 +147,72 @@
     </div>
 
     <div class="section">
+      <h2>微信公众号管理</h2>
+      <div class="wechat-actions">
+        <button class="btn-save" @click="showAddAccount = true">添加公众号</button>
+      </div>
+
+      <div v-if="showAddAccount || editingAccount" class="wechat-form">
+        <h3>{{ editingAccount ? '编辑公众号' : '添加公众号' }}</h3>
+        <div class="form-grid">
+          <div class="field"><label>AppID *</label><input v-model="accountForm.app_id" placeholder="wx..."></div>
+          <div class="field"><label>AppSecret *</label><input v-model="accountForm.app_secret" placeholder=""></div>
+          <div class="field"><label>Token</label><input v-model="accountForm.token" placeholder="回调验证token"></div>
+          <div class="field"><label>TemplateID</label><input v-model="accountForm.template_id" placeholder="模板消息ID"></div>
+          <div class="field"><label>最大绑定数</label><input v-model.number="accountForm.max_bindable" type="number"></div>
+          <div class="field"><label>备注</label><input v-model="accountForm.remark" placeholder="如：张三的号"></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn-save" @click="saveAccount">保存</button>
+          <button class="btn-skip" @click="cancelAccountEdit">取消</button>
+        </div>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>AppID</th>
+            <th>备注</th>
+            <th>绑定数/上限</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="acc in wechatAccounts" :key="acc.id">
+            <td>{{ acc.id }}</td>
+            <td>{{ acc.app_id }}</td>
+            <td>{{ acc.remark }}</td>
+            <td>{{ acc.bound_count }} / {{ acc.max_bindable }}</td>
+            <td>
+              <span class="badge" :class="acc.enabled ? 'success' : 'muted'">{{ acc.enabled ? '启用' : '禁用' }}</span>
+            </td>
+            <td class="action-cell">
+              <button class="detail-btn" @click="toggleAccountUsers(acc.id)">用户</button>
+              <button class="detail-btn" @click="startEditAccount(acc)">编辑</button>
+              <button class="detail-btn" @click="toggleAccountEnabled(acc)">{{ acc.enabled ? '禁用' : '启用' }}</button>
+              <button class="detail-btn" @click="deleteAccount(acc)" v-if="acc.bound_count === 0">删除</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div v-if="expandedAccountId" class="account-users">
+        <h3>公众号 #{{ expandedAccountId }} 绑定用户</h3>
+        <table class="data-table" v-if="accountUsers.length > 0">
+          <thead><tr><th>ID</th><th>昵称</th><th>邮箱</th></tr></thead>
+          <tbody>
+            <tr v-for="u in accountUsers" :key="u.id">
+              <td>{{ u.id }}</td><td>{{ u.nickname }}</td><td>{{ u.email }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p v-else class="no-data-text">暂无绑定用户</p>
+      </div>
+    </div>
+
+    <div class="section">
       <h2>系统设置</h2>
       <div class="setting-row">
         <label>学习开始日期</label>
@@ -245,6 +311,83 @@ const filterGroup = ref('')
 const filterAvatar = ref('')
 const filterDay = ref('')
 const expandedUsers = ref([])
+
+// 微信公众号管理
+const wechatAccounts = ref([])
+const showAddAccount = ref(false)
+const editingAccount = ref(null)
+const accountForm = ref({ app_id: '', app_secret: '', token: '', template_id: '', max_bindable: 19, remark: '' })
+const expandedAccountId = ref(null)
+const accountUsers = ref([])
+
+const loadWechatAccounts = async () => {
+  try {
+    const res = await api.get('/admin/wechat_accounts', adminHeaders())
+    wechatAccounts.value = res.accounts || []
+  } catch (e) { console.error('Failed to load wechat accounts', e) }
+}
+
+const saveAccount = async () => {
+  try {
+    if (editingAccount.value) {
+      await api.put(`/admin/wechat_accounts/${editingAccount.value.id}`, accountForm.value, adminHeaders())
+      toast.success('更新成功')
+    } else {
+      await api.post('/admin/wechat_accounts', accountForm.value, adminHeaders())
+      toast.success('添加成功')
+    }
+    cancelAccountEdit()
+    await loadWechatAccounts()
+  } catch (e) { toast.error(e.response?.data?.message || '操作失败') }
+}
+
+const startEditAccount = (acc) => {
+  editingAccount.value = acc
+  showAddAccount.value = false
+  accountForm.value = {
+    app_id: acc.app_id_full || acc.app_id,
+    app_secret: acc.app_secret,
+    token: acc.token,
+    template_id: acc.template_id,
+    max_bindable: acc.max_bindable,
+    remark: acc.remark
+  }
+}
+
+const cancelAccountEdit = () => {
+  editingAccount.value = null
+  showAddAccount.value = false
+  accountForm.value = { app_id: '', app_secret: '', token: '', template_id: '', max_bindable: 19, remark: '' }
+}
+
+const toggleAccountEnabled = async (acc) => {
+  try {
+    await api.put(`/admin/wechat_accounts/${acc.id}`, { enabled: !acc.enabled }, adminHeaders())
+    await loadWechatAccounts()
+  } catch (e) { toast.error('操作失败') }
+}
+
+const deleteAccount = async (acc) => {
+  if (!confirm(`确定删除公众号 #${acc.id}？`)) return
+  try {
+    await api.delete(`/admin/wechat_accounts/${acc.id}`, adminHeaders())
+    toast.success('删除成功')
+    await loadWechatAccounts()
+  } catch (e) { toast.error(e.response?.data?.message || '删除失败') }
+}
+
+const toggleAccountUsers = async (accountId) => {
+  if (expandedAccountId.value === accountId) {
+    expandedAccountId.value = null
+    accountUsers.value = []
+    return
+  }
+  try {
+    const res = await api.get(`/admin/wechat_accounts/${accountId}/users`, adminHeaders())
+    accountUsers.value = res.users || []
+    expandedAccountId.value = accountId
+  } catch (e) { toast.error('加载用户失败') }
+}
 
 const filteredUserList = computed(() => {
   return userDetailList.value.filter(u => {
@@ -413,6 +556,7 @@ onMounted(() => {
   loadUserStats()
   loadConfig()
   loadWords()
+  loadWechatAccounts()
 })
 </script>
 
@@ -637,4 +781,43 @@ onMounted(() => {
 .day-info .badge.warning { background: rgba(255, 200, 87, 0.2); color: #c8a000; }
 .day-info .badge.muted { background: var(--bg); color: var(--ink-faint); }
 .day-info .no-data { color: var(--ink-faint); font-style: italic; }
+.wechat-actions { margin-bottom: 1rem; }
+.wechat-form {
+  background: #f8f9fc;
+  padding: 1.2rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border: 1px solid #eef1f6;
+}
+.wechat-form h3 { font-size: 0.95rem; margin-bottom: 0.8rem; }
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+.form-grid .field label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 0.3rem;
+}
+.form-grid .field input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+.form-actions { margin-top: 0.8rem; display: flex; gap: 0.5rem; }
+.action-cell { white-space: nowrap; }
+.action-cell .detail-btn { margin-right: 0.3rem; }
+.account-users {
+  background: #f8f9fc;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 0.8rem;
+}
+.account-users h3 { font-size: 0.9rem; margin-bottom: 0.5rem; }
+.no-data-text { color: #999; font-size: 0.85rem; }
 </style>

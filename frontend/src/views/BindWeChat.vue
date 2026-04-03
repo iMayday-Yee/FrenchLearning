@@ -5,8 +5,12 @@
       <h2>绑定微信公众号</h2>
       <p class="desc">扫描二维码关注公众号，接收每日学习提醒</p>
 
-      <div class="qrcode-area" v-if="!bound">
-        <img v-if="qrcodeImage" :src="qrcodeImage" alt="微信二维码">
+      <div v-if="errorMsg" class="error-msg">
+        <p>{{ errorMsg }}</p>
+      </div>
+
+      <div class="qrcode-area" v-if="!bound && !errorMsg">
+        <img v-if="qrUrl" :src="qrUrl" alt="微信二维码">
         <div v-else class="loading-placeholder">
           <span class="spinner"></span>
         </div>
@@ -33,16 +37,29 @@ import { useToastStore } from '@/stores/toast'
 
 const router = useRouter()
 const toast = useToastStore()
-const qrcodeImage = ref('')
+const qrUrl = ref('')
 const bound = ref(false)
+const errorMsg = ref('')
 const userId = localStorage.getItem('pending_user_id')
 let pollInterval = null
 
 const loadQRCode = async () => {
   try {
     const res = await api.get(`/get_bind_qrcode?user_id=${userId}`)
-    if (res.code === 200) qrcodeImage.value = res.qrcode_image
-  } catch (e) { toast.error('二维码加载失败，可跳过此步') }
+    if (res.code === 200) {
+      if (res.already_bound) {
+        bound.value = true
+        return
+      }
+      qrUrl.value = res.qr_url
+    }
+  } catch (e) {
+    if (e.response?.status === 503) {
+      errorMsg.value = e.response.data.message || '公众号暂不可用'
+    } else {
+      toast.error('二维码加载失败，可跳过此步')
+    }
+  }
 }
 
 const skipBind = () => { stopPoll(); router.push('/agreement') }
@@ -55,9 +72,9 @@ onMounted(() => {
   pollInterval = setInterval(async () => {
     try {
       const res = await api.get(`/bindcheck?user_id=${userId}`)
-      if (res.bound) { bound.value = true; stopPoll(); setTimeout(() => router.push('/agreement'), 1000) }
+      if (res.bound) { bound.value = true; stopPoll(); setTimeout(() => router.push('/agreement'), 1500) }
     } catch (e) { if (e.response?.status === 429) stopPoll() }
-  }, 10000)
+  }, 3000)
   setTimeout(() => stopPoll(), 180000)
 })
 onUnmounted(() => stopPoll())
@@ -151,4 +168,14 @@ h2 {
   transition: all 0.2s;
 }
 .btn-next:hover { background: var(--accent); }
+.error-msg {
+  padding: 1rem;
+  background: rgba(239, 100, 97, 0.08);
+  border: 1px solid rgba(239, 100, 97, 0.2);
+  border-radius: var(--radius);
+  color: var(--rose, #ef6461);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
 </style>
