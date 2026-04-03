@@ -2,8 +2,12 @@
   <div class="chat-page">
     <div class="chat-bg"></div>
     <header class="chat-header">
-      <div class="header-side"></div>
-      <h3 class="header-title">法语助手</h3>
+      <div class="header-side">
+        <button class="back-btn" @click="router.push('/home')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+      </div>
+      <h3 class="header-title">法语学习助手</h3>
       <div class="header-side header-right">
         <div class="rounds-tag">{{ Math.max(0, remainingRounds) }}/20</div>
       </div>
@@ -254,6 +258,23 @@ onMounted(async () => {
 .header-side {
   width: 50px;
   flex-shrink: 0;
+}
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--ink-secondary);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+.back-btn:hover {
+  background: rgba(0,0,0,0.05);
+  color: var(--ink);
 }
 .header-right {
   display: flex;
