@@ -114,6 +114,7 @@
         <span @click="$router.push('/login')">已有账号？<strong>登录</strong></span>
       </div>
     </div>
+    <router-link to="/" class="back-link fade-up" style="animation-delay:0.3s">← 返回首页</router-link>
   </div>
 </template>
 
@@ -392,6 +393,14 @@ onUnmounted(() => {
 }
 .form-footer span { cursor: pointer; }
 .form-footer strong { color: var(--accent); }
+.back-link {
+  margin-top: 2rem;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.back-link:hover { color: var(--ink); }
 @media (max-width: 480px) {
   .field-grid { grid-template-columns: 1fr; }
   .field.span-2 { grid-column: span 1; }

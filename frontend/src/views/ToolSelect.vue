@@ -3,7 +3,7 @@
     <div class="tool-bg"></div>
     <header class="tool-header">
       <h2 class="greeting">你好，{{ nickname }} 👋</h2>
-      <button class="btn-logout" @click="logout">退出</button>
+      <button class="btn-logout" @click="logout">退出登录</button>
     </header>
     <main class="tool-main">
       <p class="section-label">选择工具</p>
