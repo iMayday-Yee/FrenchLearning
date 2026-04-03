@@ -1,6 +1,7 @@
 import os
 from flask import Flask
 from flask_cors import CORS
+from flask_compress import Compress
 from extensions import db, jwt, limiter
 from config import Config
 
@@ -9,6 +10,8 @@ def create_app():
     app.config.from_object(Config)
 
     CORS(app, resources={r"/api/*": {"origins": "*"}})
+    app.config['COMPRESS_MIN_SIZE'] = 0
+    Compress(app)
     db.init_app(app)
     jwt.init_app(app)
     limiter.init_app(app)
@@ -20,7 +23,9 @@ def create_app():
 
     @app.route('/uploads/<path:filename>')
     def serve_uploads(filename):
-        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+        response = send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+        response.headers['Cache-Control'] = 'public, max-age=86400'
+        return response
 
     from routes import register_routes
     register_routes(app)

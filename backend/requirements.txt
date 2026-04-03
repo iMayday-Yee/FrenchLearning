@@ -3,6 +3,7 @@ flask-cors==5.*
 flask-sqlalchemy==3.*
 flask-jwt-extended==4.*
 flask-limiter==3.*
+flask-compress==1.*
 gunicorn==22.*
 gevent==24.*
 requests==2.*
