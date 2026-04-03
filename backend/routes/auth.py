@@ -101,7 +101,6 @@ def register():
     # 注册成功后标记该邮箱所有未使用的验证码为已使用
     mark_code_as_used(email)
 
-    from models import SystemConfig
     start_date = db.session.get(SystemConfig, 'study_start_date')
     return jsonify({'code': 200, 'user_id': user.id, 'study_start_date': start_date.value if start_date else '', 'message': '注册成功'})
 
