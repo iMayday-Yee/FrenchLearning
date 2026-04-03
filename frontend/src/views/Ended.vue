@@ -1,31 +1,53 @@
 <template>
-  <div class="waiting-page">
+  <div class="ended-page">
     <div class="card fade-up">
       <div class="icon-wrap">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
       </div>
-      <span class="tag">Patience</span>
-      <h2>学习尚未开始</h2>
-      <p>学习将于 <strong>{{ studyStartDate }}</strong> 正式开始</p>
-      <p class="tip">届时请再次打开应用</p>
+      <span class="tag">Fin</span>
+      <h2>学习已结束</h2>
+      <p>本次法语学习已于 <strong>{{ endDate }}</strong> 结束</p>
+      <p class="tip">感谢您的参与</p>
       <button class="btn-logout" @click="logout">退出登录</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
 const userStore = useUserStore()
+const studyStartDate = ref('')
 
 onMounted(async () => {
-  await userStore.fetchProfile()
+  // 尝试从 userStore 获取
+  if (userStore.studyStartDate) {
+    studyStartDate.value = userStore.studyStartDate
+  } else {
+    // 未登录用户，从 can_register 接口获取
+    try {
+      const res = await fetch('/api/study/can_register')
+      const data = await res.json()
+      if (data.study_start_date) {
+        studyStartDate.value = data.study_start_date
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
 })
 
-const studyStartDate = computed(() => userStore.studyStartDate || '待定')
+const endDate = computed(() => {
+  if (studyStartDate.value) {
+    const start = new Date(studyStartDate.value)
+    start.setDate(start.getDate() + 9)
+    return start.toISOString().split('T')[0]
+  }
+  return '10天学习周期'
+})
 
 const logout = () => {
   userStore.logout()
@@ -34,7 +56,7 @@ const logout = () => {
 </script>
 
 <style scoped>
-.waiting-page {
+.ended-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -53,14 +75,14 @@ const logout = () => {
   border: 1px solid var(--border-light);
 }
 .icon-wrap {
-  color: var(--accent);
+  color: var(--rose);
   margin-bottom: 1.2rem;
 }
 .tag {
   font-family: var(--font-display);
   font-size: 0.85rem;
   font-style: italic;
-  color: var(--accent);
+  color: var(--rose);
   letter-spacing: 0.1em;
 }
 h2 {

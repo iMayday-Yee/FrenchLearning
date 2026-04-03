@@ -12,6 +12,7 @@ const routes = [
   { path: '/result', component: () => import('@/views/Result.vue'), meta: { auth: true } },
   { path: '/waiting', component: () => import('@/views/Waiting.vue'), meta: { auth: true } },
   { path: '/completed', component: () => import('@/views/Completed.vue'), meta: { auth: true } },
+  { path: '/ended', component: () => import('@/views/Ended.vue') },
   { path: '/admin', component: () => import('@/views/admin/AdminLogin.vue') },
   { path: '/admin/dashboard', component: () => import('@/views/admin/Dashboard.vue'), meta: { admin: true } },
 ]
@@ -33,11 +34,24 @@ router.beforeEach(async (to, from) => {
     return '/admin'
   }
 
+  // 注册页面检查：如果是第11天起，不允许注册
+  if (to.path === '/register') {
+    try {
+      const res = await fetch('/api/study/can_register')
+      const data = await res.json()
+      if (!data.can_register) {
+        return '/ended'
+      }
+    } catch (e) {
+      // ignore, allow registration attempt
+    }
+  }
+
   if (to.path === '/chat') {
     const studyStore = (await import('@/stores/study')).useStudyStore()
     await studyStore.fetchStatus()
     if (studyStore.phase === 'not_started') return '/waiting'
-    if (studyStore.phase === 'completed') return '/completed'
+    if (studyStore.phase === 'completed') return '/ended'
     if (studyStore.needAssessment) return '/assessment'
   }
 })

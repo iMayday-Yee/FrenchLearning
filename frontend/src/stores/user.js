@@ -7,6 +7,7 @@ export const useUserStore = defineStore('user', {
     userId: null,
     nickname: '',
     avatarType: '',
+    studyStartDate: '',
   }),
   actions: {
     async setLogin(data) {
@@ -20,6 +21,7 @@ export const useUserStore = defineStore('user', {
         this.userId = res.user_id
         this.nickname = res.nickname
         this.avatarType = res.avatar_type
+        this.studyStartDate = res.study_start_date || ''
       } catch (e) {
         this.logout()
       }
@@ -29,6 +31,7 @@ export const useUserStore = defineStore('user', {
       this.userId = null
       this.nickname = ''
       this.avatarType = ''
+      this.studyStartDate = ''
       localStorage.removeItem('token')
     }
   }

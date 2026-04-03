@@ -7,12 +7,28 @@
 
     <div class="stats">
       <div class="stat-card">
-        <div class="value">{{ stats.total_users }}</div>
+        <div class="value">{{ stats.total_users || 0 }}</div>
         <div class="label">总用户数</div>
       </div>
       <div class="stat-card">
-        <div class="value">{{ stats.completed_assessments }}</div>
+        <div class="value">{{ stats.completed_assessments || 0 }}</div>
         <div class="label">完成测评</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">{{ userStats.total_practice || 0 }}</div>
+        <div class="label">总跟读次数</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">{{ userStats.total_conversation_rounds || 0 }}</div>
+        <div class="label">总对话轮次</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">{{ userStats.users_with_material_sent || 0 }}</div>
+        <div class="label">已发材料人数</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">{{ userStats.total_invalid_audio || 0 }}</div>
+        <div class="label">无效音频次数</div>
       </div>
     </div>
 
@@ -34,6 +50,100 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="section">
+      <h2>用户学习详情</h2>
+      <div class="user-stats-filter">
+        <select v-model="filterGroup">
+          <option value="">全部组别</option>
+          <option value="low">低自主性组</option>
+          <option value="adjustable">可调自主性组</option>
+          <option value="high">高自主性组</option>
+        </select>
+        <select v-model="filterAvatar">
+          <option value="">全部头像</option>
+          <option value="human">Human</option>
+          <option value="robot">Robot</option>
+        </select>
+        <select v-model="filterDay">
+          <option value="">全部天数</option>
+          <option v-for="d in 10" :key="d" :value="d">Day {{ d }}</option>
+        </select>
+      </div>
+      <div class="user-stats-table-wrapper">
+        <table class="data-table user-stats-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>昵称</th>
+              <th>组别</th>
+              <th>头像</th>
+              <th v-if="filterDay">Day {{ filterDay }} 跟读</th>
+              <th v-if="filterDay">Day {{ filterDay }} 轮次</th>
+              <th v-if="filterDay">Day {{ filterDay }} 材料</th>
+              <th v-if="filterDay">Day {{ filterDay }} 拒绝</th>
+              <th v-if="!filterDay">活跃天数</th>
+              <th v-if="!filterDay">总跟读</th>
+              <th v-if="!filterDay">总轮次</th>
+              <th>测评</th>
+              <th v-if="!filterDay">每日详情</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="u in filteredUserList" :key="u.user_id">
+              <td>{{ u.user_id }}</td>
+              <td>{{ u.nickname }}</td>
+              <td>{{ u.group_type }}</td>
+              <td>{{ u.avatar_type }}</td>
+              <td v-if="filterDay">{{ getUserDayStatus(u.user_id, filterDay)?.practice_count || 0 }}</td>
+              <td v-if="filterDay">{{ getUserDayStatus(u.user_id, filterDay)?.conversation_rounds || 0 }}</td>
+              <td v-if="filterDay">
+                <span class="badge" :class="getUserDayStatus(u.user_id, filterDay)?.material_sent ? 'success' : 'muted'">
+                  {{ getUserDayStatus(u.user_id, filterDay)?.material_sent ? '已发' : '未发' }}
+                </span>
+              </td>
+              <td v-if="filterDay">
+                <span class="badge" :class="getUserDayStatus(u.user_id, filterDay)?.rejected ? 'warning' : 'muted'">
+                  {{ getUserDayStatus(u.user_id, filterDay)?.rejected ? '已拒' : '否' }}
+                </span>
+              </td>
+              <td v-if="!filterDay">{{ u.active_days }}</td>
+              <td v-if="!filterDay">{{ u.total_practice }}</td>
+              <td v-if="!filterDay">{{ u.total_rounds }}</td>
+              <td>{{ u.assessment_completed ? `${u.assessment_correct}/${u.assessment_total}` : '未完成' }}</td>
+              <td v-if="!filterDay">
+                <button class="detail-btn" @click="toggleUserDetail(u.user_id)">
+                  {{ expandedUsers.includes(u.user_id) ? '收起' : '查看' }}
+                </button>
+              </td>
+            </tr>
+            <tr v-if="expandedUsers.length > 0" v-for="uid in expandedUsers" :key="`detail-${uid}`" class="detail-row">
+              <td :colspan="filterDay ? 8 : 9">
+                <div class="day-grid">
+                  <div v-for="d in 10" :key="d" class="day-card" :class="{ 'has-material': getUserDayStatus(uid, d)?.material_sent }">
+                    <div class="day-title">Day {{ d }}</div>
+                    <div class="day-info">
+                      <span v-if="getUserDayStatus(uid, d)">
+                        <span class="badge" :class="getUserDayStatus(uid, d).material_sent ? 'success' : 'muted'">
+                          {{ getUserDayStatus(uid, d).material_sent ? '已发材料' : '未发' }}
+                        </span>
+                        <span class="badge" :class="getUserDayStatus(uid, d).rejected ? 'warning' : 'muted'">
+                          {{ getUserDayStatus(uid, d).rejected ? '已拒绝' : '' }}
+                        </span>
+                        <br/>
+                        跟读: {{ getUserDayStatus(uid, d).practice_count }}<br/>
+                        轮次: {{ getUserDayStatus(uid, d).conversation_rounds }}
+                      </span>
+                      <span v-else class="no-data">无记录</span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="section">
@@ -60,8 +170,9 @@
         <div v-for="(word, idx) in editingWords" :key="idx" class="word-row">
           <div class="word-fields">
             <label>单词 {{ idx + 1 }}</label>
-            <input v-model="word.french" placeholder="法语" />
-            <input v-model="word.chinese" placeholder="中文" />
+            <input v-model="word.french" placeholder="法语" class="equal-input" />
+            <input v-model="word.phonetic" placeholder="音标" class="equal-input" />
+            <input v-model="word.chinese" placeholder="中文" class="equal-input" />
           </div>
           <div class="word-audio">
             <span class="audio-path">{{ word.audio || '未设置' }}</span>
@@ -117,7 +228,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { api } from '@/api'
 import { useRouter } from 'vue-router'
 import { useToastStore } from '@/stores/toast'
@@ -125,8 +236,37 @@ import { useToastStore } from '@/stores/toast'
 const router = useRouter()
 const toast = useToastStore()
 const stats = ref({ slots: [], group_stats: [], total_users: 0, completed_assessments: 0 })
+const userStats = ref({ total_practice: 0, total_conversation_rounds: 0, users_with_material_sent: 0, total_invalid_audio: 0, users_who_rejected: 0 })
+const userDetailList = ref([])
 const users = ref([])
 const adminHeaders = () => ({ headers: { 'Admin-Token': localStorage.getItem('admin_token') } })
+
+const filterGroup = ref('')
+const filterAvatar = ref('')
+const filterDay = ref('')
+const expandedUsers = ref([])
+
+const filteredUserList = computed(() => {
+  return userDetailList.value.filter(u => {
+    if (filterGroup.value && u.group_type !== filterGroup.value) return false
+    if (filterAvatar.value && u.avatar_type !== filterAvatar.value) return false
+    return true
+  })
+})
+
+const getUserDayStatus = (userId, day) => {
+  const user = userDetailList.value.find(u => u.user_id === userId)
+  return user?.daily_status?.[Number(day)] || null
+}
+
+const toggleUserDetail = (userId) => {
+  const idx = expandedUsers.value.indexOf(userId)
+  if (idx >= 0) {
+    expandedUsers.value.splice(idx, 1)
+  } else {
+    expandedUsers.value.push(userId)
+  }
+}
 
 const startDate = ref('')
 const startDateMsg = ref('')
@@ -144,6 +284,16 @@ const loadDashboard = async () => {
     users.value = usersRes.users
   } catch (e) {
     toast.error('仪表盘数据加载失败')
+  }
+}
+
+const loadUserStats = async () => {
+  try {
+    const res = await api.get('/admin/user_stats', adminHeaders())
+    userStats.value = res.stats
+    userDetailList.value = res.users
+  } catch (e) {
+    toast.error('用户学习统计数据加载失败')
   }
 }
 
@@ -260,6 +410,7 @@ const logout = () => {
 
 onMounted(() => {
   loadDashboard()
+  loadUserStats()
   loadConfig()
   loadWords()
 })
@@ -298,9 +449,12 @@ onMounted(() => {
 .dashboard-header button:hover { background: var(--rose-subtle); }
 .stats {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
   margin-bottom: 1.5rem;
+}
+@media (max-width: 600px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
 }
 .stat-card {
   background: var(--surface);
@@ -397,6 +551,7 @@ onMounted(() => {
   outline: none;
 }
 .word-fields input:focus { border-color: var(--accent); }
+.word-fields .equal-input { flex: 1; min-width: 0; }
 .word-audio { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; }
 .audio-path { color: var(--ink-muted); flex: 1; font-size: 0.75rem; }
 .preview-btn {
@@ -436,4 +591,50 @@ onMounted(() => {
 }
 .btn-save:hover { opacity: 0.9; }
 .save-msg { color: var(--sage); font-size: 0.8rem; }
+
+/* 用户统计相关 */
+.user-stats-filter { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.user-stats-filter select {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  background: var(--bg);
+  color: var(--ink);
+  outline: none;
+}
+.user-stats-table-wrapper { overflow-x: auto; }
+.user-stats-table th, .user-stats-table td { white-space: nowrap; }
+.detail-btn {
+  padding: 0.2rem 0.5rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+.detail-row td { padding: 0.5rem !important; background: var(--bg); }
+.day-grid { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.day-card {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem;
+  min-width: 80px;
+  background: var(--surface);
+}
+.day-card.has-material { border-color: var(--sage); background: rgba(123, 205, 168, 0.05); }
+.day-title { font-weight: 600; font-size: 0.75rem; margin-bottom: 0.3rem; color: var(--ink); }
+.day-info { font-size: 0.7rem; color: var(--ink-muted); line-height: 1.4; }
+.day-info .badge {
+  display: inline-block;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  margin-right: 0.2rem;
+}
+.day-info .badge.success { background: var(--sage-subtle); color: var(--sage); }
+.day-info .badge.warning { background: rgba(255, 200, 87, 0.2); color: #c8a000; }
+.day-info .badge.muted { background: var(--bg); color: var(--ink-faint); }
+.day-info .no-data { color: var(--ink-faint); font-style: italic; }
 </style>

@@ -29,6 +29,22 @@ def get_today_status(user_id, study_day):
         db.session.commit()
     return status
 
+@study_bp.route('/study/can_register', methods=['GET'])
+def can_register():
+    """检查是否允许注册（公开接口，不需要认证）"""
+    start_cfg = db.session.get(SystemConfig, 'study_start_date')
+    if not start_cfg:
+        return jsonify({'can_register': True, 'study_start_date': None})
+
+    from datetime import date
+    start = date.fromisoformat(start_cfg.value)
+    delta = (date.today() - start).days + 1
+    return jsonify({
+        'can_register': delta <= 10,
+        'study_start_date': start_cfg.value
+    })
+
+
 @study_bp.route('/study/status', methods=['GET'])
 @jwt_required()
 def get_status():

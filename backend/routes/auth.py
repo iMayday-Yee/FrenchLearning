@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from extensions import db, limiter
-from models import User
+from models import User, SystemConfig
 from services.group_service import assign_group
 from services.email_service import send_verification_email, verify_code, mark_code_as_used
 
@@ -55,6 +55,15 @@ def verify_email():
 @auth_bp.route('/register', methods=['POST'])
 def register():
     """用户注册接口"""
+    # 检查学习是否已开始（防止第11天后注册）
+    start_cfg = db.session.get(SystemConfig, 'study_start_date')
+    if start_cfg:
+        from datetime import date
+        start = date.fromisoformat(start_cfg.value)
+        delta = (date.today() - start).days + 1
+        if delta > 10:
+            return jsonify({'code': 400, 'message': '学习已结束，暂不支持注册'}), 400
+
     data = request.get_json()
 
     required = ['email', 'phone', 'password', 'nickname', 'age', 'gender', 'education', 'french_interest', 'french_level', 'study_time_slot']
@@ -124,12 +133,12 @@ def get_profile():
     if not user:
         return jsonify({'code': 404, 'message': '用户不存在'}), 404
 
-    from config import Config
+    start_date = db.session.get(SystemConfig, 'study_start_date')
     return jsonify({
         'user_id': user.id,
         'nickname': user.nickname,
         'avatar_type': user.avatar_type,
         'avatar_url': f'/avatars/{user.avatar_type}.png',
-        'study_start_date': Config.STUDY_START_DATE,
+        'study_start_date': start_date.value if start_date else '',
         'wechat_bound': bool(user.wechat_openid)
     })

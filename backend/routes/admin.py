@@ -53,6 +53,78 @@ def dashboard():
         'completed_assessments': completed_assessments
     })
 
+
+@admin_bp.route('/admin/user_stats', methods=['GET'])
+@admin_required
+def get_user_stats():
+    """获取所有用户的学习详情统计"""
+    # 获取所有用户及其每日状态
+    users = User.query.all()
+    daily_statuses = DailyStatus.query.all()
+
+    # 按 user_id 分组
+    status_by_user = {}
+    for ds in daily_statuses:
+        if ds.user_id not in status_by_user:
+            status_by_user[ds.user_id] = {}
+        status_by_user[ds.user_id][ds.study_day] = {
+            'material_sent': ds.material_sent,
+            'rejected': ds.rejected,
+            'practice_count': ds.practice_count,
+            'invalid_audio_count': ds.invalid_audio_count,
+            'conversation_rounds': ds.conversation_rounds,
+            'date': ds.date.isoformat() if ds.date else None
+        }
+
+    # 计算统计
+    total_practice = sum(ds.practice_count for ds in daily_statuses)
+    total_invalid = sum(ds.invalid_audio_count for ds in daily_statuses)
+    total_rounds = sum(ds.conversation_rounds for ds in daily_statuses)
+    # 有多少人至少收到过一次材料
+    users_with_material = len(set(ds.user_id for ds in daily_statuses if ds.material_sent))
+    # 有多少人至少拒绝过一次
+    users_who_rejected = len(set(ds.user_id for ds in daily_statuses if ds.rejected))
+
+    result = []
+    for u in users:
+        user_days = status_by_user.get(u.id, {})
+        # 计算该用户的学习天数（material_sent=True的天数）
+        active_days = sum(1 for d in user_days.values() if d['material_sent'])
+        total_prac = sum(d['practice_count'] for d in user_days.values())
+        total_rnd = sum(d['conversation_rounds'] for d in user_days.values())
+
+        # 评估成绩
+        assessment = AssessmentSummary.query.filter_by(user_id=u.id).first()
+
+        result.append({
+            'user_id': u.id,
+            'nickname': u.nickname,
+            'email': u.email,
+            'group_type': u.group_type,
+            'avatar_type': u.avatar_type,
+            'study_time_slot': u.study_time_slot,
+            'active_days': active_days,
+            'total_practice': total_prac,
+            'total_rounds': total_rnd,
+            'assessment_completed': assessment is not None,
+            'assessment_correct': assessment.correct_count if assessment else None,
+            'assessment_total': assessment.total_count if assessment else None,
+            'daily_status': user_days
+        })
+
+    return jsonify({
+        'code': 200,
+        'stats': {
+            'total_practice': total_practice,
+            'total_invalid_audio': total_invalid,
+            'total_conversation_rounds': total_rounds,
+            'users_with_material_sent': users_with_material,
+            'users_who_rejected': users_who_rejected
+        },
+        'users': result
+    })
+
+
 @admin_bp.route('/admin/users', methods=['GET'])
 @admin_required
 def get_users():
@@ -150,6 +222,9 @@ def update_words(day):
         w['index'] = i + 1
         if not w.get('audio'):
             w['audio'] = f"day{day}/{day}-{i+1}.mp3"
+        # 确保 phonetic 字段被保留（如果没有则设为空）
+        if 'phonetic' not in w:
+            w['phonetic'] = ''
 
     words_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'words.json')
     with open(words_file, 'r', encoding='utf-8') as f:
