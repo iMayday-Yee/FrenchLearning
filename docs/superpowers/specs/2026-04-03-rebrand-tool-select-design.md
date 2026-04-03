@@ -12,8 +12,8 @@
 | `/home` | 跳转到 `/` | 工具选择页（卡片网格） |
 | `/chat` | 跳转到 `/login` | 法语学习助手（现有逻辑不变） |
 
+- `Home.vue` 重命名为 `Landing.vue`，挂载到 `/`，作为落地页，仅改品牌文案。
 - 新增 `ToolSelect.vue`，挂载到 `/home`，需要登录才能访问。
-- `Home.vue`（`/`）保持落地页角色，仅改品牌文案。
 - 已登录用户访问 `/` 时自动跳转到 `/home`。
 
 ## 工具选择页（ToolSelect.vue）
@@ -29,6 +29,14 @@
 
 页面顶部显示用户名和简单的欢迎语。样式与现有 UI 风格一致（毛玻璃、柔和渐变）。
 
+## 学习状态判断
+
+整个小五智能助手平台在 10 天实验期内上线，因此：
+
+- **时间判断保持在登录/注册层面**：注册时检查是否超过实验期（已有 `/api/study/can_register`），登录后路由守卫检查学习阶段（not_started → `/waiting`，completed → `/ended`）。
+- **工具选择页不做额外时间判断**：用户能进入 `/home` 就说明在有效期内。
+- **结束相关文案统一改为平台级别**：`Ended.vue` 和 `Completed.vue` 的措辞从"法语学习"改为"小五智能助手体验"。
+
 ## 品牌文案替换
 
 ### 需要改的
@@ -36,10 +44,10 @@
 | 位置 | 当前 | 改为 |
 |------|------|------|
 | `index.html` title | 法语学习助手 | 小五智能助手 |
-| `Home.vue` 标题 | 法语学习助手 | 小五智能助手 |
-| `Home.vue` 副标题 | 每天三个词，轻松开启你的法语之旅 | 你的智能学习与效率伙伴 |
-| `Ended.vue` | 本次法语学习已于... | 本次法语学习已于...（不改，描述的是法语功能本身） |
-| `Completed.vue` | 您已完成全部10天的法语学习 | 不改，同上 |
+| `Landing.vue`（原 Home.vue）标题 | 法语学习助手 | 小五智能助手 |
+| `Landing.vue` 副标题 | 每天三个词，轻松开启你的法语之旅 | 你的智能学习与效率伙伴 |
+| `Ended.vue` | 本次法语学习已于...结束 | 本次小五智能助手体验已于...结束 |
+| `Completed.vue` | 您已完成全部10天的法语学习 | 您已完成本次小五智能助手体验，期待下次再见 |
 
 ### 不改的
 
@@ -74,9 +82,9 @@
 ### 前端
 
 1. `frontend/index.html` — title 标签
-2. `frontend/src/views/Home.vue` — 标题、副标题文案
+2. `frontend/src/views/Home.vue` — 重命名为 `Landing.vue`，改标题、副标题文案
 3. `frontend/src/views/Chat.vue` — 无需改动（保持工具名）
-4. `frontend/src/router/index.js` — 新增 `/home` 路由，添加已登录用户 `/` 跳转逻辑
+4. `frontend/src/router/index.js` — Home.vue→Landing.vue，新增 `/home` 路由，添加已登录用户 `/` 跳转逻辑
 5. **新增** `frontend/src/views/ToolSelect.vue` — 工具选择页
 
 ### 后端
