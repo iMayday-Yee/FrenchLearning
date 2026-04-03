@@ -5,7 +5,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from extensions import db, limiter
 from models import User
 from services.group_service import assign_group
-from services.email_service import send_verification_email, verify_code
+from services.email_service import send_verification_email, verify_code, mark_code_as_used
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -32,22 +32,37 @@ def send_code():
     return jsonify({'code': 200, 'message': message})
 
 
+@auth_bp.route('/verify-email', methods=['POST'])
+def verify_email():
+    """验证邮箱验证码"""
+    data = request.get_json()
+    email = (data.get('email') or '').strip().lower()
+    code = data.get('code', '')
+
+    if not email or not EMAIL_RE.match(email):
+        return jsonify({'code': 400, 'message': '请输入有效的邮箱地址'}), 400
+
+    if not code or len(code) != 6:
+        return jsonify({'code': 400, 'message': '请输入6位验证码'}), 400
+
+    ok, msg = verify_code(email, code)
+    if not ok:
+        return jsonify({'code': 400, 'message': msg}), 400
+
+    return jsonify({'code': 200, 'message': '验证成功'})
+
+
 @auth_bp.route('/register', methods=['POST'])
 def register():
     """用户注册接口"""
     data = request.get_json()
 
-    required = ['email', 'email_code', 'phone', 'password', 'nickname', 'age', 'gender', 'education', 'french_interest', 'french_level', 'study_time_slot']
+    required = ['email', 'phone', 'password', 'nickname', 'age', 'gender', 'education', 'french_interest', 'french_level', 'study_time_slot']
     for field in required:
         if not data.get(field):
             return jsonify({'code': 400, 'message': f'缺少必填字段: {field}'}), 400
 
     email = data['email'].strip().lower()
-
-    # 验证邮箱验证码
-    ok, msg = verify_code(email, data['email_code'])
-    if not ok:
-        return jsonify({'code': 400, 'message': msg}), 400
 
     if User.query.filter_by(email=email).first():
         return jsonify({'code': 400, 'message': '该邮箱已注册'}), 400
@@ -73,6 +88,9 @@ def register():
     )
     db.session.add(user)
     db.session.commit()
+
+    # 注册成功后标记该邮箱所有未使用的验证码为已使用
+    mark_code_as_used(email)
 
     from models import SystemConfig
     start_date = db.session.get(SystemConfig, 'study_start_date')

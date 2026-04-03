@@ -54,7 +54,16 @@ def send_verification_email(email_address):
         EmailVerification.created_at > cutoff
     ).first()
     if recent:
-        return False, '发送过于频繁，请稍后再试'
+        elapsed = (datetime.utcnow() - recent.created_at).total_seconds()
+        remaining = int(Config.EMAIL_SEND_COOLDOWN_SECONDS - elapsed)
+        return False, f'发送过于频繁，请{remaining}秒后再试'
+
+    # 使该邮箱之前所有未使用的验证码失效（确保只有最新一个有效）
+    EmailVerification.query.filter(
+        EmailVerification.email == email_address,
+        EmailVerification.used == False
+    ).update({'used': True})
+    db.session.commit()
 
     code = generate_code()
 
@@ -133,6 +142,15 @@ def verify_code(email_address, code):
     if not record:
         return False, '验证码错误或已过期'
 
-    record.used = True
-    db.session.commit()
+    # 不在这里标记 used=True，让验证码在有效期内可以重复使用
+    # （只有在注册成功后才标记为已使用，防止同一验证码用于多次注册）
     return True, '验证成功'
+
+
+def mark_code_as_used(email_address):
+    """标记该邮箱所有未使用的验证码为已使用（注册成功后调用）"""
+    EmailVerification.query.filter(
+        EmailVerification.email == email_address,
+        EmailVerification.used == False
+    ).update({'used': True})
+    db.session.commit()

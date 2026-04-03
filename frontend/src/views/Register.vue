@@ -167,10 +167,22 @@ const sendCode = async () => {
   }
 }
 
-const verifyEmail = () => {
-  if (emailCode.value.length === 6) {
-    emailVerified.value = true
-    toast.success('邮箱验证成功')
+const verifyEmail = async () => {
+  if (emailCode.value.length !== 6) {
+    toast.error('请输入6位验证码')
+    return
+  }
+  try {
+    const res = await api.post('/verify-email', {
+      email: form.value.email,
+      code: emailCode.value
+    })
+    if (res.code === 200) {
+      emailVerified.value = true
+      toast.success('邮箱验证成功')
+    }
+  } catch (e) {
+    toast.error(e.response?.data?.message || '验证码验证失败')
   }
 }
 
@@ -186,8 +198,7 @@ const handleRegister = async () => {
   loading.value = true
   try {
     const res = await api.post('/register', {
-      ...form.value,
-      email_code: emailCode.value
+      ...form.value
     })
     if (res.code === 200) {
       localStorage.setItem('pending_user_id', res.user_id)
