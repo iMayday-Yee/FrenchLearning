@@ -33,6 +33,8 @@ def check_and_send_reminders(app):
         if not users:
             return
 
+        from services.wechat_service import send_study_reminder_wechat
+
         for user in users:
             # 获取或创建今天的 DailyStatus
             status = DailyStatus.query.filter_by(user_id=user.id, study_day=study_day).first()
@@ -44,13 +46,24 @@ def check_and_send_reminders(app):
             if status.reminder_sent:
                 continue
 
-            success, msg = send_study_reminder(user.email, study_day)
-            if success:
-                status.reminder_sent = True
-                db.session.commit()
-                print(f"Reminder sent to {user.email} for day {study_day}")
+            # 邮件必发
+            email_ok, email_msg = send_study_reminder(user.email, study_day)
+            if email_ok:
+                print(f"Email reminder sent to {user.email} for day {study_day}")
             else:
-                print(f"Failed to send reminder to {user.email}: {msg}")
+                print(f"Failed to send email to {user.email}: {email_msg}")
+
+            # 绑定了微信的也必发
+            if user.wechat_openid:
+                wx_ok, wx_msg = send_study_reminder_wechat(user, study_day)
+                if wx_ok:
+                    print(f"WeChat reminder sent to user {user.id} for day {study_day}")
+                else:
+                    print(f"Failed to send WeChat to user {user.id}: {wx_msg}")
+
+            # 标记已发送（不管成功失败，避免重复轰炸）
+            status.reminder_sent = True
+            db.session.commit()
 
 
 def init_scheduler(app):

@@ -31,10 +31,24 @@ def create_app():
         init_group_slots(app)
         init_wechat_accounts(app)
 
-    # 启动定时任务（debug 模式下只在 reloader 子进程中启动，避免重复）
-    if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-        from services.scheduler_service import init_scheduler
-        init_scheduler(app)
+    # 启动定时任务（确保只有一个进程运行 scheduler）
+    # - debug 模式：只在 reloader 子进程中启动
+    # - gunicorn 模式：用文件锁确保只有一个 worker 启动
+    if app.debug:
+        if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+            from services.scheduler_service import init_scheduler
+            init_scheduler(app)
+    else:
+        import fcntl
+        lock_path = os.path.join(app.instance_path, '.scheduler.lock')
+        try:
+            lock_fd = open(lock_path, 'w')
+            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            from services.scheduler_service import init_scheduler
+            init_scheduler(app)
+            app._scheduler_lock = lock_fd  # 保持引用防止 GC 释放锁
+        except (IOError, OSError):
+            pass  # 其他 worker，跳过
 
     return app
 

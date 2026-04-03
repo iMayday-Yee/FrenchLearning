@@ -39,3 +39,42 @@ def send_template_message(openid, template_id, access_token, url, data):
         "data": data
     }
     return requests.post(api_url, json=payload).json()
+
+
+def send_study_reminder_wechat(user, study_day):
+    """给用户发送微信学习提醒，返回 (success, message)"""
+    if not user.wechat_openid or not user.wechat_account_index:
+        return False, 'user not bound'
+
+    from models import WechatAccount
+    from extensions import db
+    account = db.session.get(WechatAccount, user.wechat_account_index)
+    if not account or not account.template_id:
+        return False, 'account or template_id not found'
+
+    access_token = get_access_token(account.id, account.app_id, account.app_secret)
+    if not access_token:
+        return False, 'failed to get access_token'
+
+    data = {
+        "first": {"value": "📚 法语学习助手 · 来自小五智能助手", "color": "#7B9BF4"},
+        "keyword1": {"value": f"第 {study_day} 天", "color": "#173177"},
+        "keyword2": {"value": "今天的学习内容已准备好，点击开始学习吧！", "color": "#173177"},
+        "remark": {"value": "每天坚持一点点，进步看得见 ✨", "color": "#999999"}
+    }
+
+    try:
+        result = send_template_message(
+            openid=user.wechat_openid,
+            template_id=account.template_id,
+            access_token=access_token,
+            url="https://xiaowu.quest",
+            data=data
+        )
+        if result.get('errcode') == 0:
+            return True, 'ok'
+        else:
+            return False, f"wechat error: {result.get('errmsg', 'unknown')}"
+    except Exception as e:
+        print(f"WeChat reminder error: {e}")
+        return False, str(e)
