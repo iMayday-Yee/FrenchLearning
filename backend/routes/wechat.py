@@ -125,10 +125,13 @@ def wechat_callback():
 
     if msg_type == 'event' and event in ('subscribe', 'SCAN'):
         openid = data.get('FromUserName')
-        event_key = data.get('EventKey', '')
+        event_key = data.get('EventKey') or ''
 
         # 新关注时微信会加 "qrscene_" 前缀
-        event_key = event_key.replace('qrscene_', '')
+        if event_key:
+            event_key = event_key.replace('qrscene_', '')
+        else:
+            event_key = ''
 
         if event_key.startswith('bind_'):
             user_id_str = event_key.replace('bind_', '')
