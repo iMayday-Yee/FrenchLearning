@@ -20,13 +20,9 @@ def check_and_send_reminders(app):
         if study_day < 1 or study_day > 10:
             return
 
-        # 只在整点后 0-4 分钟内触发
+        # 精确到分钟：当前时间对应的 time_slot，如 "22:30"
         now = datetime.now()
-        if now.minute > 4:
-            return
-
-        # 当前整点对应的 time_slot，如 "22:00"
-        current_slot = f"{now.hour:02d}:00"
+        current_slot = f"{now.hour:02d}:{now.minute:02d}"
 
         # 找到匹配时间段的用户
         users = User.query.filter_by(study_time_slot=current_slot).all()
