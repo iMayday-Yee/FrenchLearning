@@ -57,10 +57,8 @@ def send_study_reminder_wechat(user, study_day):
         return False, 'failed to get access_token'
 
     data = {
-        "first": {"value": "📚 法语学习助手 · 来自小五智能助手", "color": "#7B9BF4"},
-        "keyword1": {"value": f"第 {study_day} 天", "color": "#173177"},
-        "keyword2": {"value": "今天的学习内容已准备好，点击开始学习吧！", "color": "#173177"},
-        "remark": {"value": "每天坚持一点点，进步看得见 ✨", "color": "#999999"}
+        "keyword1": {"value": f"第 {study_day} 天"},
+        "keyword2": {"value": "今日学习内容已更新，点击开始学习吧！"},
     }
 
     try:
