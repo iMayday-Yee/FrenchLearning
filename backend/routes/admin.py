@@ -308,8 +308,7 @@ def get_wechat_accounts():
         bound_count = User.query.filter_by(wechat_account_index=acc.id).filter(User.wechat_openid.isnot(None)).count()
         result.append({
             'id': acc.id,
-            'app_id': acc.app_id[:8] + '...' if len(acc.app_id) > 8 else acc.app_id,
-            'app_id_full': acc.app_id,
+            'app_id': acc.app_id,
             'app_secret': acc.app_secret,
             'token': acc.token,
             'template_id': acc.template_id,

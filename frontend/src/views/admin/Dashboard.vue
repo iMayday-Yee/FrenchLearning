@@ -34,7 +34,7 @@
 
     <div class="section">
       <h2>分组统计</h2>
-      <table class="data-table">
+      <table class="data-table group-table">
         <thead>
           <tr>
             <th>组别</th>
@@ -53,96 +53,12 @@
     </div>
 
     <div class="section">
-      <h2>用户学习详情</h2>
-      <div class="user-stats-filter">
-        <select v-model="filterGroup">
-          <option value="">全部组别</option>
-          <option value="low">低自主性组</option>
-          <option value="adjustable">可调自主性组</option>
-          <option value="high">高自主性组</option>
-        </select>
-        <select v-model="filterAvatar">
-          <option value="">全部头像</option>
-          <option value="human">Human</option>
-          <option value="robot">Robot</option>
-        </select>
-        <select v-model="filterDay">
-          <option value="">全部天数</option>
-          <option v-for="d in 10" :key="d" :value="d">Day {{ d }}</option>
-        </select>
-      </div>
-      <div class="user-stats-table-wrapper">
-        <table class="data-table user-stats-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>昵称</th>
-              <th>组别</th>
-              <th>头像</th>
-              <th v-if="filterDay">Day {{ filterDay }} 跟读</th>
-              <th v-if="filterDay">Day {{ filterDay }} 轮次</th>
-              <th v-if="filterDay">Day {{ filterDay }} 材料</th>
-              <th v-if="filterDay">Day {{ filterDay }} 拒绝</th>
-              <th v-if="!filterDay">活跃天数</th>
-              <th v-if="!filterDay">总跟读</th>
-              <th v-if="!filterDay">总轮次</th>
-              <th>测评</th>
-              <th v-if="!filterDay">每日详情</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="u in filteredUserList" :key="u.user_id">
-              <td>{{ u.user_id }}</td>
-              <td>{{ u.nickname }}</td>
-              <td>{{ u.group_type }}</td>
-              <td>{{ u.avatar_type }}</td>
-              <td v-if="filterDay">{{ getUserDayStatus(u.user_id, filterDay)?.practice_count || 0 }}</td>
-              <td v-if="filterDay">{{ getUserDayStatus(u.user_id, filterDay)?.conversation_rounds || 0 }}</td>
-              <td v-if="filterDay">
-                <span class="badge" :class="getUserDayStatus(u.user_id, filterDay)?.material_sent ? 'success' : 'muted'">
-                  {{ getUserDayStatus(u.user_id, filterDay)?.material_sent ? '已发' : '未发' }}
-                </span>
-              </td>
-              <td v-if="filterDay">
-                <span class="badge" :class="getUserDayStatus(u.user_id, filterDay)?.rejected ? 'warning' : 'muted'">
-                  {{ getUserDayStatus(u.user_id, filterDay)?.rejected ? '已拒' : '否' }}
-                </span>
-              </td>
-              <td v-if="!filterDay">{{ u.active_days }}</td>
-              <td v-if="!filterDay">{{ u.total_practice }}</td>
-              <td v-if="!filterDay">{{ u.total_rounds }}</td>
-              <td>{{ u.assessment_completed ? `${u.assessment_correct}/${u.assessment_total}` : '未完成' }}</td>
-              <td v-if="!filterDay">
-                <button class="detail-btn" @click="toggleUserDetail(u.user_id)">
-                  {{ expandedUsers.includes(u.user_id) ? '收起' : '查看' }}
-                </button>
-              </td>
-            </tr>
-            <tr v-if="expandedUsers.length > 0" v-for="uid in expandedUsers" :key="`detail-${uid}`" class="detail-row">
-              <td :colspan="filterDay ? 8 : 9">
-                <div class="day-grid">
-                  <div v-for="d in 10" :key="d" class="day-card" :class="{ 'has-material': getUserDayStatus(uid, d)?.material_sent }">
-                    <div class="day-title">Day {{ d }}</div>
-                    <div class="day-info">
-                      <span v-if="getUserDayStatus(uid, d)">
-                        <span class="badge" :class="getUserDayStatus(uid, d).material_sent ? 'success' : 'muted'">
-                          {{ getUserDayStatus(uid, d).material_sent ? '已发材料' : '未发' }}
-                        </span>
-                        <span class="badge" :class="getUserDayStatus(uid, d).rejected ? 'warning' : 'muted'">
-                          {{ getUserDayStatus(uid, d).rejected ? '已拒绝' : '' }}
-                        </span>
-                        <br/>
-                        跟读: {{ getUserDayStatus(uid, d).practice_count }}<br/>
-                        轮次: {{ getUserDayStatus(uid, d).conversation_rounds }}
-                      </span>
-                      <span v-else class="no-data">无记录</span>
-                    </div>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <h2>系统设置</h2>
+      <div class="setting-row">
+        <label>学习开始日期</label>
+        <input type="date" v-model="startDate" />
+        <button class="btn-save" @click="saveStartDate">保存</button>
+        <span v-if="startDateMsg" class="save-msg">{{ startDateMsg }}</span>
       </div>
     </div>
 
@@ -164,7 +80,7 @@
         </div>
         <div class="form-actions">
           <button class="btn-save" @click="saveAccount">保存</button>
-          <button class="btn-skip" @click="cancelAccountEdit">取消</button>
+          <button class="btn-cancel" @click="cancelAccountEdit">取消</button>
         </div>
       </div>
 
@@ -213,12 +129,124 @@
     </div>
 
     <div class="section">
-      <h2>系统设置</h2>
-      <div class="setting-row">
-        <label>学习开始日期</label>
-        <input type="date" v-model="startDate" />
-        <button class="btn-save" @click="saveStartDate">保存</button>
-        <span v-if="startDateMsg" class="save-msg">{{ startDateMsg }}</span>
+      <h2>用户列表</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>邮箱</th>
+            <th>昵称</th>
+            <th>组别</th>
+            <th>头像</th>
+            <th>微信</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="user in users" :key="user.id">
+            <td>{{ user.id }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.nickname }}</td>
+            <td>{{ user.group_type }}</td>
+            <td>{{ user.avatar_type }}</td>
+            <td>{{ user.wechat_bound ? '✓' : '✗' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>用户学习详情</h2>
+      <div class="user-stats-filter">
+        <select v-model="filterGroup">
+          <option value="">全部组别</option>
+          <option value="low">低自主性组</option>
+          <option value="adjustable">可调自主性组</option>
+          <option value="high">高自主性组</option>
+        </select>
+        <select v-model="filterAvatar">
+          <option value="">全部头像</option>
+          <option value="human">Human</option>
+          <option value="robot">Robot</option>
+        </select>
+        <select v-model="filterDay">
+          <option value="">全部天数</option>
+          <option v-for="d in 10" :key="d" :value="d">Day {{ d }}</option>
+        </select>
+      </div>
+      <div class="user-stats-table-wrapper">
+        <table class="data-table user-stats-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>昵称</th>
+              <th>组别</th>
+              <th>头像</th>
+              <th v-if="filterDay">Day {{ filterDay }} 跟读</th>
+              <th v-if="filterDay">Day {{ filterDay }} 轮次</th>
+              <th v-if="filterDay">Day {{ filterDay }} 材料</th>
+              <th v-if="filterDay">Day {{ filterDay }} 拒绝</th>
+              <th v-if="!filterDay">活跃天数</th>
+              <th v-if="!filterDay">总跟读</th>
+              <th v-if="!filterDay">总轮次</th>
+              <th>测评</th>
+              <th v-if="!filterDay">每日详情</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="u in filteredUserList" :key="u.user_id">
+              <tr>
+                <td>{{ u.user_id }}</td>
+                <td>{{ u.nickname }}</td>
+                <td>{{ u.group_type }}</td>
+                <td>{{ u.avatar_type }}</td>
+                <td v-if="filterDay">{{ getUserDayStatus(u.user_id, filterDay)?.practice_count || 0 }}</td>
+                <td v-if="filterDay">{{ getUserDayStatus(u.user_id, filterDay)?.conversation_rounds || 0 }}</td>
+                <td v-if="filterDay">
+                  <span class="badge" :class="getUserDayStatus(u.user_id, filterDay)?.material_sent ? 'success' : 'muted'">
+                    {{ getUserDayStatus(u.user_id, filterDay)?.material_sent ? '已发' : '未发' }}
+                  </span>
+                </td>
+                <td v-if="filterDay">
+                  <span class="badge" :class="getUserDayStatus(u.user_id, filterDay)?.rejected ? 'warning' : 'muted'">
+                    {{ getUserDayStatus(u.user_id, filterDay)?.rejected ? '已拒' : '否' }}
+                  </span>
+                </td>
+                <td v-if="!filterDay">{{ u.active_days }}</td>
+                <td v-if="!filterDay">{{ u.total_practice }}</td>
+                <td v-if="!filterDay">{{ u.total_rounds }}</td>
+                <td>{{ u.assessment_completed ? `${u.assessment_correct}/${u.assessment_total}` : '未完成' }}</td>
+                <td v-if="!filterDay">
+                  <button class="detail-btn" @click="toggleUserDetail(u.user_id)">
+                    {{ expandedUsers.includes(u.user_id) ? '收起' : '查看' }}
+                  </button>
+                </td>
+              </tr>
+              <tr v-if="expandedUsers.includes(u.user_id)" class="detail-row">
+                <td :colspan="filterDay ? 8 : 9">
+                  <div class="day-grid">
+                    <div v-for="d in 10" :key="d" class="day-card" :class="{ 'has-material': getUserDayStatus(u.user_id, d)?.material_sent }">
+                      <div class="day-title">Day {{ d }}</div>
+                      <div class="day-info">
+                        <span v-if="getUserDayStatus(u.user_id, d)">
+                          <span class="badge" :class="getUserDayStatus(u.user_id, d).material_sent ? 'success' : 'muted'">
+                            {{ getUserDayStatus(u.user_id, d).material_sent ? '已发材料' : '未发' }}
+                          </span>
+                          <span class="badge" :class="getUserDayStatus(u.user_id, d).rejected ? 'warning' : 'muted'">
+                            {{ getUserDayStatus(u.user_id, d).rejected ? '已拒绝' : '' }}
+                          </span>
+                          <br/>
+                          跟读: {{ getUserDayStatus(u.user_id, d).practice_count }}<br/>
+                          轮次: {{ getUserDayStatus(u.user_id, d).conversation_rounds }}
+                        </span>
+                        <span v-else class="no-data">无记录</span>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -265,31 +293,6 @@
       </div>
     </div>
 
-    <div class="section">
-      <h2>用户列表</h2>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>邮箱</th>
-            <th>昵称</th>
-            <th>组别</th>
-            <th>头像</th>
-            <th>微信</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="user in users" :key="user.id">
-            <td>{{ user.id }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.nickname }}</td>
-            <td>{{ user.group_type }}</td>
-            <td>{{ user.avatar_type }}</td>
-            <td>{{ user.wechat_bound ? '✓' : '✗' }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
   </div>
 </template>
 
@@ -345,7 +348,7 @@ const startEditAccount = (acc) => {
   editingAccount.value = acc
   showAddAccount.value = false
   accountForm.value = {
-    app_id: acc.app_id_full || acc.app_id,
+    app_id: acc.app_id,
     app_secret: acc.app_secret,
     token: acc.token,
     template_id: acc.template_id,
@@ -635,6 +638,7 @@ onMounted(() => {
   font-size: 0.85rem;
 }
 .data-table th { font-weight: 500; color: var(--ink-muted); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; }
+.group-table th, .group-table td { text-align: center; }
 .export-buttons, .setting-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
 .setting-row label { font-weight: 500; white-space: nowrap; font-size: 0.85rem; color: var(--ink-secondary); }
 .setting-row input[type="date"] {
@@ -810,7 +814,18 @@ onMounted(() => {
   font-size: 0.85rem;
 }
 .form-actions { margin-top: 0.8rem; display: flex; gap: 0.5rem; }
-.action-cell { white-space: nowrap; }
+.btn-cancel {
+  padding: 0.45rem 1.2rem;
+  background: transparent;
+  color: var(--ink-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+.btn-cancel:hover { border-color: var(--ink-muted); color: var(--ink); }
+.action-cell { white-space: nowrap; width: 1%; }
 .action-cell .detail-btn { margin-right: 0.3rem; }
 .account-users {
   background: #f8f9fc;
