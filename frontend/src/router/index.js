@@ -52,7 +52,6 @@ router.beforeEach(async (to, from) => {
     await studyStore.fetchStatus()
     if (studyStore.phase === 'not_started') return '/waiting'
     if (studyStore.phase === 'completed') return '/ended'
-    if (studyStore.needAssessment) return '/assessment'
   }
 })
 

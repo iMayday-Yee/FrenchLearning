@@ -71,10 +71,13 @@ def get_status():
 
     if phase == 'learning' and study_day == 5:
         from models import AssessmentSummary
-        if not AssessmentSummary.query.filter_by(user_id=user_id).first():
-            need_assessment = True
-        else:
+        if AssessmentSummary.query.filter_by(user_id=user_id).first():
             need_assessment = False
+        elif user.group_type in ('low', 'adjustable'):
+            today_status_check = get_today_status(user_id, study_day)
+            need_assessment = today_status_check.material_sent
+        else:
+            need_assessment = True
     else:
         need_assessment = False
 

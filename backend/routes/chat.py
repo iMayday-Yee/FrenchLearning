@@ -6,6 +6,8 @@ from models import User, DailyStatus, ChatMessage, SystemConfig
 from services.llm_service import build_messages, call_llm, parse_llm_response
 import json
 import os
+import logging
+logger = logging.getLogger(__name__)
 
 chat_bp = Blueprint('chat', __name__)
 
@@ -108,11 +110,25 @@ def send_message():
     reply_text = parsed.get('reply', '好的，请继续练习吧！')
     intent = parsed.get('intent', 'other')
 
+    # 关键词兜底：组合匹配，用户要求学习材料时强制覆盖意图
+    want_material = (
+        ('单词' in content and any(v in content for v in ['发', '给', '要', '学', '来', '看', '练']))
+        or any(kw in content for kw in ['开始学习', '开始练习', '发给我', '给我发', '要学习', '发卡片'])
+    )
+    accept_keywords = ['好的', '好啊', '行', '行啊', '可以', '来吧', '开始吧', '好呀', '嗯', 'ok', 'OK']
+    if want_material:
+        intent = 'request_material'
+    elif today_status.invitation_sent and any(kw in content for kw in accept_keywords):
+        intent = 'accept_learning'
+
+    logger.warning(f"[CHAT] user={user_id} day={study_day} intent={intent} content={content[:30]} material_sent={today_status.material_sent}")
+
     assistant_msgs = []
 
     if intent == 'request_material':
         words_data = load_words_json()
         day_words = next((d for d in words_data if d['day'] == study_day), None)
+        logger.warning(f"[CHAT] request_material: day_words={'found' if day_words else 'NONE'} for day={study_day}")
         if day_words:
             is_first_send = not today_status.material_sent
             today_status.material_sent = True

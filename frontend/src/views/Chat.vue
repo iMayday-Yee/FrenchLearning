@@ -15,6 +15,19 @@
       <span>Terminé</span> — 今天的对话次数已用完，明天再来
     </div>
 
+    <div v-if="showAssessmentCard" class="assessment-card">
+      <div class="assessment-card-inner">
+        <div class="assessment-info">
+          <span class="assessment-icon">📝</span>
+          <div>
+            <div class="assessment-title">词汇测评</div>
+            <div class="assessment-desc">今天是第5天，来检验一下学习成果吧！</div>
+          </div>
+        </div>
+        <button class="assessment-btn" @click="goToAssessment">开始测评</button>
+      </div>
+    </div>
+
     <footer class="chat-footer">
       <div class="input-row">
         <input
@@ -34,16 +47,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { api } from '@/api'
 import { useUserStore } from '@/stores/user'
 import { useStudyStore } from '@/stores/study'
 import { useToastStore } from '@/stores/toast'
 import MessageList from '@/components/MessageList.vue'
 
+const router = useRouter()
 const userStore = useUserStore()
 const studyStore = useStudyStore()
 const toast = useToastStore()
+
+const showAssessmentCard = computed(() => studyStore.needAssessment)
+const goToAssessment = () => router.push('/assessment')
 
 const inputText = ref('')
 const chatMessages = ref([])
@@ -91,6 +109,9 @@ const sendMessage = async () => {
       })
     }
     remainingRounds.value = res.remaining_rounds
+    if (res.messages && res.messages.some(m => m.type === 'word_audio')) {
+      await studyStore.fetchStatus()
+    }
   } catch (e) {
     chatMessages.value = chatMessages.value.filter(m => m.id !== thinkingMsgId.value)
     toast.error('消息发送失败，请重试')
@@ -151,6 +172,9 @@ const callEnterAPI = async () => {
           type: msg.type, content: msg.content, timestamp: new Date().toISOString()
         })
       })
+      if (res.auto_messages.some(m => m.type === 'word_audio')) {
+        await studyStore.fetchStatus()
+      }
     }
   } catch (e) {
     // 静默处理
@@ -268,6 +292,62 @@ onMounted(async () => {
   font-style: italic;
   color: var(--accent);
   font-weight: 600;
+}
+
+/* 测评提示卡片 */
+.assessment-card {
+  position: relative;
+  z-index: 10;
+  padding: 0.6rem 1rem 0;
+}
+.assessment-card-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(243,240,255,0.85) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(123,155,244,0.18);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 2px 12px rgba(123,155,244,0.10);
+}
+.assessment-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.assessment-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.assessment-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.assessment-desc {
+  font-size: 0.75rem;
+  color: var(--ink-secondary);
+  margin-top: 0.1rem;
+}
+.assessment-btn {
+  flex-shrink: 0;
+  padding: 0.5rem 1.1rem;
+  border: none;
+  border-radius: var(--radius-xl, 20px);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+  box-shadow: 0 2px 8px rgba(123,155,244,0.25);
+}
+.assessment-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 14px rgba(123,155,244,0.35);
 }
 
 /* 毛玻璃底栏 */
