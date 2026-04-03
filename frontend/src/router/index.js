@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
-  { path: '/', component: () => import('@/views/Home.vue') },
+  { path: '/', component: () => import('@/views/Landing.vue') },
+  { path: '/home', component: () => import('@/views/ToolSelect.vue'), meta: { auth: true } },
   { path: '/register', component: () => import('@/views/Register.vue') },
   { path: '/bindwechat', component: () => import('@/views/BindWeChat.vue') },
   { path: '/agreement', component: () => import('@/views/Agreement.vue') },
@@ -32,6 +33,11 @@ router.beforeEach(async (to, from) => {
 
   if (to.meta.admin && !localStorage.getItem('admin_token')) {
     return '/admin'
+  }
+
+  // 已登录用户访问落地页，跳转到工具选择页
+  if (to.path === '/' && store.token) {
+    return '/home'
   }
 
   // 注册页面检查：如果是第11天起，不允许注册
