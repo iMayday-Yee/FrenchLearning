@@ -5,8 +5,8 @@
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       </div>
       <span class="tag">Félicitations</span>
-      <h2>学习已完成</h2>
-      <p>您已完成全部 10 天的法语学习</p>
+      <h2>体验已完成</h2>
+      <p>您已完成本次小五智能助手体验，期待下次再见</p>
       <p class="sub">感谢您的参与和坚持</p>
       <button class="btn-logout" @click="logout">退出登录</button>
     </div>

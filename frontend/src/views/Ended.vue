@@ -5,8 +5,8 @@
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
       </div>
       <span class="tag">Fin</span>
-      <h2>学习已结束</h2>
-      <p>本次法语学习已于 <strong>{{ endDate }}</strong> 结束</p>
+      <h2>体验已结束</h2>
+      <p>本次小五智能助手体验已于 <strong>{{ endDate }}</strong> 结束</p>
       <p class="tip">感谢您的参与</p>
       <button class="btn-logout" @click="logout">退出登录</button>
     </div>
