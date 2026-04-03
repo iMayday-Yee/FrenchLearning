@@ -326,12 +326,17 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   gap: 0.8rem;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(243,240,255,0.85) 100%);
+  padding: 0.85rem 1rem;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(243,240,255,0.95) 100%);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(123,155,244,0.18);
+  border: 1.5px solid rgba(123,155,244,0.30);
   border-radius: var(--radius-lg, 12px);
-  box-shadow: 0 2px 12px rgba(123,155,244,0.10);
+  box-shadow: 0 4px 20px rgba(123,155,244,0.18);
+  animation: card-pulse 2s ease-in-out infinite;
+}
+@keyframes card-pulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(123,155,244,0.18); }
+  50% { box-shadow: 0 4px 28px rgba(123,155,244,0.35), 0 0 0 3px rgba(123,155,244,0.08); }
 }
 .assessment-info {
   display: flex;
@@ -340,12 +345,12 @@ onMounted(async () => {
   min-width: 0;
 }
 .assessment-icon {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   flex-shrink: 0;
 }
 .assessment-title {
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   color: var(--ink);
 }
 .assessment-desc {
@@ -355,20 +360,21 @@ onMounted(async () => {
 }
 .assessment-btn {
   flex-shrink: 0;
-  padding: 0.5rem 1.1rem;
+  padding: 0.6rem 1.4rem;
   border: none;
   border-radius: var(--radius-xl, 20px);
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
   color: white;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.25s var(--ease);
-  box-shadow: 0 2px 8px rgba(123,155,244,0.25);
+  box-shadow: 0 3px 12px rgba(123,155,244,0.35);
+  letter-spacing: 0.02em;
 }
 .assessment-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 14px rgba(123,155,244,0.35);
+  transform: scale(1.06);
+  box-shadow: 0 5px 18px rgba(123,155,244,0.45);
 }
 
 /* 毛玻璃底栏 */

@@ -8,6 +8,32 @@ import os
 
 study_bp = Blueprint('study', __name__)
 
+def _build_material_messages_for_enter(words, study_day, base_url=''):
+    """供 study/enter 使用，与 build_material_messages 逻辑一致"""
+    messages = []
+    messages.append({"type": "text", "content": "好的，这是今天要学习的3个法语单词，请跟着音频练习吧！"})
+    for i, word in enumerate(words):
+        audio_path = word['audio']
+        if not audio_path.startswith('http'):
+            audio_path = f"{base_url}/static/audio/{audio_path}"
+        messages.append({
+            "type": "word_audio",
+            "content": {
+                "french": word['french'],
+                "chinese": word['chinese'],
+                "phonetic": word.get('phonetic', ''),
+                "audio_url": audio_path,
+                "word_index": i
+            }
+        })
+    messages.append({"type": "text", "content": "以上是今天的3个单词，请跟着音频练习发音吧！点击每个单词旁边的🎤按钮录制你的跟读。可以多跟读几次哦。"})
+    if study_day == 5:
+        messages.append({
+            "type": "text",
+            "content": "📢 今日学习内容已发送完毕！\n\n第5天测评已开启，请点击下方「开始测评」按钮，输入框上方的蓝色横幅，检验你这5天的学习成果吧 🎯"
+        })
+    return messages
+
 def get_study_day(user_id):
     """计算当前是第几天学习"""
     start_date_str = db.session.get(SystemConfig, 'study_start_date').value
@@ -73,11 +99,9 @@ def get_status():
         from models import AssessmentSummary
         if AssessmentSummary.query.filter_by(user_id=user_id).first():
             need_assessment = False
-        elif user.group_type in ('low', 'adjustable'):
+        else:
             today_status_check = get_today_status(user_id, study_day)
             need_assessment = today_status_check.material_sent
-        else:
-            need_assessment = True
     else:
         need_assessment = False
 
@@ -152,45 +176,14 @@ def study_enter():
         if day_words:
             today_status.material_sent = True
             db.session.commit()
-            # 构建学习资料消息
             base_url = request.host_url.rstrip('/')
-            messages = []
-            msg_content = "这是今天要练习的法语内容，你可以开始学习了！"
-            messages.append({"type": "text", "content": msg_content})
-            # 保存到数据库
-            msg = ChatMessage(user_id=user_id, study_day=study_day, role='assistant',
-                              content_type='text', content=msg_content)
-            db.session.add(msg)
-            for i, word in enumerate(day_words['words']):
-                audio_path = word['audio']
-                if not audio_path.startswith('http'):
-                    audio_path = f"{base_url}/static/audio/{audio_path}"
-                card_content = json.dumps({
-                    "french": word['french'],
-                    "chinese": word['chinese'],
-                    "phonetic": word.get('phonetic', ''),
-                    "audio_url": audio_path,
-                    "word_index": i
-                })
-                messages.append({
-                    "type": "word_audio",
-                    "content": {
-                        "french": word['french'],
-                        "chinese": word['chinese'],
-                        "phonetic": word.get('phonetic', ''),
-                        "audio_url": audio_path,
-                        "word_index": i
-                    }
-                })
-                # 保存 word_audio 消息
-                msg = ChatMessage(user_id=user_id, study_day=study_day, role='assistant',
-                                  content_type='word_audio', content=card_content)
-                db.session.add(msg)
-            end_content = "以上是今天的3个单词，请跟着音频练习发音吧！点击每个单词旁边的🎤按钮录制你的跟读。可以多跟读几次哦。"
-            messages.append({"type": "text", "content": end_content})
-            msg = ChatMessage(user_id=user_id, study_day=study_day, role='assistant',
-                              content_type='text', content=end_content)
-            db.session.add(msg)
+            messages = _build_material_messages_for_enter(day_words['words'], study_day, base_url)
+            for msg in messages:
+                content_type = msg['type']
+                actual_content = msg['content'] if isinstance(msg['content'], str) else json.dumps(msg['content'])
+                db_msg = ChatMessage(user_id=user_id, study_day=study_day, role='assistant',
+                                     content_type=content_type, content=actual_content)
+                db.session.add(db_msg)
             db.session.commit()
             return jsonify({'auto_messages': messages})
         return jsonify({'auto_messages': []})

@@ -37,7 +37,7 @@ def load_words_json():
     with open(words_file, 'r', encoding='utf-8') as f:
         return json.load(f)
 
-def build_material_messages(words, base_url=''):
+def build_material_messages(words, study_day, base_url=''):
     """构建学习材料消息"""
     messages = []
     messages.append({"type": "text", "content": "好的，这是今天要学习的3个法语单词，请跟着音频练习吧！"})
@@ -58,6 +58,14 @@ def build_material_messages(words, base_url=''):
         })
 
     messages.append({"type": "text", "content": "以上是今天的3个单词，请跟着音频练习发音吧！点击每个单词旁边的🎤按钮录制你的跟读。可以多跟读几次哦。"})
+
+    # Day 5 追加测评提醒
+    if study_day == 5:
+        messages.append({
+            "type": "text",
+            "content": "📢 今日学习内容已发送完毕！\n\n第5天测评已开启，请点击下方「开始测评」按钮，输入框上方的蓝色横幅，检验你这5天的学习成果吧 🎯"
+        })
+
     return messages
 
 @chat_bp.route('/chat/send', methods=['POST'])
@@ -132,7 +140,7 @@ def send_message():
         if day_words:
             is_first_send = not today_status.material_sent
             today_status.material_sent = True
-            material_msgs = build_material_messages(day_words['words'], base_url=request.host_url.rstrip('/'))
+            material_msgs = build_material_messages(day_words['words'], study_day, base_url=request.host_url.rstrip('/'))
             for msg in material_msgs:
                 content_type = msg['type']
                 actual_content = msg['content'] if isinstance(msg['content'], str) else json.dumps(msg['content'])
@@ -155,7 +163,7 @@ def send_message():
         if day_words:
             is_first_send = not today_status.material_sent
             today_status.material_sent = True
-            material_msgs = build_material_messages(day_words['words'], base_url=request.host_url.rstrip('/'))
+            material_msgs = build_material_messages(day_words['words'], study_day, base_url=request.host_url.rstrip('/'))
             for msg in material_msgs:
                 content_type = msg['type']
                 actual_content = msg['content'] if isinstance(msg['content'], str) else json.dumps(msg['content'])
