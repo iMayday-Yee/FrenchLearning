@@ -67,10 +67,10 @@ def init_scheduler(app):
     scheduler.add_job(
         func=check_and_send_reminders,
         trigger='interval',
-        minutes=1,
+        seconds=30,
         args=[app],
         id='study_reminder',
         misfire_grace_time=300
     )
     scheduler.start()
-    print("Scheduler started: study reminder job running every minute")
+    print("Scheduler started: study reminder job running every 30 seconds")
