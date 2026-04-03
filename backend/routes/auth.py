@@ -5,7 +5,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from extensions import db, limiter
 from models import User, SystemConfig
 from services.group_service import assign_group
-from services.email_service import send_verification_email, verify_code, mark_code_as_used
+from services.email_service import send_verification_email, verify_code, mark_code_as_used, send_reset_code_email
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -121,6 +121,63 @@ def login():
 
     token = create_access_token(identity=str(user.id))
     return jsonify({'code': 200, 'token': token, 'user_id': user.id})
+
+
+@auth_bp.route('/send-reset-code', methods=['POST'])
+@limiter.limit("20 per hour")
+def send_reset_code():
+    """发送密码重置验证码"""
+    data = request.get_json()
+    email = (data.get('email') or '').strip().lower()
+
+    if not email or not EMAIL_RE.match(email):
+        return jsonify({'code': 400, 'message': '请输入有效的邮箱地址'}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        # 为防止暴力探测，邮箱不存在时也返回成功（不提示是否存在）
+        return jsonify({'code': 200, 'message': '如果该邮箱已注册，验证码已发送'}), 200
+
+    success, message = send_reset_code_email(email)
+    if not success:
+        return jsonify({'code': 400, 'message': message}), 400
+
+    return jsonify({'code': 200, 'message': message})
+
+
+@auth_bp.route('/reset-password', methods=['POST'])
+def reset_password():
+    """验证验证码并重置密码"""
+    data = request.get_json()
+    email = (data.get('email') or '').strip().lower()
+    code = data.get('code', '')
+    new_password = data.get('new_password', '')
+
+    if not email or not EMAIL_RE.match(email):
+        return jsonify({'code': 400, 'message': '请输入有效的邮箱地址'}), 400
+
+    if not code or len(code) != 6:
+        return jsonify({'code': 400, 'message': '请输入6位验证码'}), 400
+
+    if not new_password or len(new_password) < 6:
+        return jsonify({'code': 400, 'message': '新密码至少6位'}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({'code': 400, 'message': '该邮箱未注册'}), 400
+
+    ok, msg = verify_code(email, code)
+    if not ok:
+        return jsonify({'code': 400, 'message': msg}), 400
+
+    # 重置密码
+    user.password_hash = generate_password_hash(new_password)
+    db.session.commit()
+
+    # 标记验证码已使用
+    mark_code_as_used(email)
+
+    return jsonify({'code': 200, 'message': '密码重置成功，请使用新密码登录'})
 
 
 @auth_bp.route('/user/profile', methods=['GET'])

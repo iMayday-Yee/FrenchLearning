@@ -21,6 +21,7 @@
         </button>
       </form>
       <div class="form-footer">
+        <span @click="$router.push('/reset-password')" class="forgot-link">忘记密码？</span>
         <span @click="$router.push('/register')">还没有账号？<strong>注册</strong></span>
       </div>
     </div>
@@ -165,7 +166,9 @@ const handleLogin = async () => {
 .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
 .form-footer {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 1.5rem;
   font-size: 0.85rem;
   color: var(--ink-muted);
@@ -173,6 +176,7 @@ const handleLogin = async () => {
 .form-footer span { cursor: pointer; transition: color 0.2s; }
 .form-footer span:hover { color: var(--accent); }
 .form-footer strong { font-weight: 600; color: var(--accent); }
+.forgot-link { font-size: 0.8rem; }
 .back-link {
   margin-top: 2rem;
   font-size: 0.85rem;

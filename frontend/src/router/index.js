@@ -8,6 +8,7 @@ const routes = [
   { path: '/agreement', component: () => import('@/views/Agreement.vue') },
   { path: '/register-done', component: () => import('@/views/RegisterDone.vue') },
   { path: '/login', component: () => import('@/views/Login.vue') },
+  { path: '/reset-password', component: () => import('@/views/ResetPassword.vue') },
   { path: '/chat', component: () => import('@/views/Chat.vue'), meta: { auth: true } },
   { path: '/assessment', component: () => import('@/views/Assessment.vue'), meta: { auth: true } },
   { path: '/result', component: () => import('@/views/Result.vue'), meta: { auth: true } },

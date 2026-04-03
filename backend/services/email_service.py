@@ -155,3 +155,56 @@ def mark_code_as_used(email_address):
         EmailVerification.used == False
     ).update({'used': True})
     db.session.commit()
+
+
+def send_reset_code_email(email_address):
+    """发送密码重置验证码邮件，返回 (success, message)"""
+    cutoff = datetime.utcnow() - timedelta(seconds=Config.EMAIL_SEND_COOLDOWN_SECONDS)
+    recent = EmailVerification.query.filter(
+        EmailVerification.email == email_address,
+        EmailVerification.created_at > cutoff
+    ).first()
+    if recent:
+        elapsed = (datetime.utcnow() - recent.created_at).total_seconds()
+        remaining = int(Config.EMAIL_SEND_COOLDOWN_SECONDS - elapsed)
+        return False, f'发送过于频繁，请{remaining}秒后再试'
+
+    # 使该邮箱之前所有未使用的验证码失效
+    EmailVerification.query.filter(
+        EmailVerification.email == email_address,
+        EmailVerification.used == False
+    ).update({'used': True})
+    db.session.commit()
+
+    code = generate_code()
+
+    body_html = f"""
+    <p style="margin:0 0 20px;">你好！</p>
+    <p style="margin:0 0 24px;">你正在重置小五智能助手的密码，请使用以下验证码完成验证：</p>
+    <div style="text-align:center;margin:0 0 24px;">
+      <div style="display:inline-block;padding:14px 40px;background:linear-gradient(135deg,#7B9BF4 0%,#98B2F7 100%);border-radius:12px;font-size:28px;font-weight:700;color:#ffffff;letter-spacing:8px;">{code}</div>
+    </div>
+    <p style="margin:0 0 8px;color:#5E6478;">验证码有效期为 <strong>{Config.EMAIL_CODE_EXPIRY_MINUTES} 分钟</strong>，请尽快使用。</p>
+    <p style="margin:0;color:#9096A6;font-size:13px;">如非本人操作，请忽略此邮件。</p>
+    """
+
+    msg = MIMEMultipart('alternative')
+    msg['From'] = Config.SMTP_USER
+    msg['To'] = email_address
+    msg['Subject'] = '小五智能助手 - 密码重置验证码'
+    msg.attach(MIMEText(f'你的密码重置验证码是：{code}，有效期{Config.EMAIL_CODE_EXPIRY_MINUTES}分钟。', 'plain', 'utf-8'))
+    msg.attach(MIMEText(_build_html_email('密码重置', body_html), 'html', 'utf-8'))
+
+    try:
+        with smtplib.SMTP_SSL(Config.SMTP_SERVER, Config.SMTP_PORT) as server:
+            server.login(Config.SMTP_USER, Config.SMTP_PASSWORD)
+            server.sendmail(Config.SMTP_USER, email_address, msg.as_string())
+    except Exception as e:
+        print(f"SMTP error: {e}")
+        return False, '邮件发送失败，请稍后重试'
+
+    verification = EmailVerification(email=email_address, code=code)
+    db.session.add(verification)
+    db.session.commit()
+
+    return True, '验证码已发送'
