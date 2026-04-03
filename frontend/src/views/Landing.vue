@@ -1,17 +1,17 @@
 <template>
   <div class="home">
     <div class="container">
-      <div class="pill fade-up" style="animation-delay:0.1s">Bonjour !</div>
-      <h1 class="title fade-up" style="animation-delay:0.2s">法语学习助手</h1>
-      <p class="subtitle fade-up" style="animation-delay:0.3s">每天三个词，轻松开启你的法语之旅</p>
+      <div class="pill fade-up" style="animation-delay:0.1s">Hi there !</div>
+      <h1 class="title fade-up" style="animation-delay:0.2s">小五智能助手</h1>
+      <p class="subtitle fade-up" style="animation-delay:0.3s">你的智能学习与效率伙伴</p>
       <div class="actions fade-up" style="animation-delay:0.4s">
         <router-link to="/login" class="btn btn-primary">登录</router-link>
         <router-link to="/register" class="btn btn-soft">注册账号</router-link>
       </div>
       <div class="footer-words fade-up" style="animation-delay:0.6s">
-        <span>Merci</span><span class="dot"></span>
-        <span>Enchanté</span><span class="dot"></span>
-        <span>Au revoir</span>
+        <span>智能</span><span class="dot"></span>
+        <span>高效</span><span class="dot"></span>
+        <span>有趣</span>
       </div>
     </div>
   </div>
