@@ -36,7 +36,7 @@ def _build_html_email(title, body_html):
         <!-- Footer -->
         <tr>
           <td style="padding:20px 32px;background:#F8F9FC;border-top:1px solid #EFF1F6;text-align:center;">
-            <div style="font-size:12px;color:#9096A6;">法语学习助手 · <a href="https://xiaowu.quest" style="color:#7B9BF4;text-decoration:none;">xiaowu.quest</a></div>
+            <div style="font-size:12px;color:#9096A6;">小五智能助手 · <a href="https://xiaowu.quest" style="color:#7B9BF4;text-decoration:none;">xiaowu.quest</a></div>
           </td>
         </tr>
       </table>
@@ -69,7 +69,7 @@ def send_verification_email(email_address):
 
     body_html = f"""
     <p style="margin:0 0 20px;">你好！</p>
-    <p style="margin:0 0 24px;">你正在注册法语学习平台，请使用以下验证码完成验证：</p>
+    <p style="margin:0 0 24px;">你正在注册小五智能助手，请使用以下验证码完成验证：</p>
     <div style="text-align:center;margin:0 0 24px;">
       <div style="display:inline-block;padding:14px 40px;background:linear-gradient(135deg,#7B9BF4 0%,#98B2F7 100%);border-radius:12px;font-size:28px;font-weight:700;color:#ffffff;letter-spacing:8px;">{code}</div>
     </div>
@@ -80,7 +80,7 @@ def send_verification_email(email_address):
     msg = MIMEMultipart('alternative')
     msg['From'] = Config.SMTP_USER
     msg['To'] = email_address
-    msg['Subject'] = '法语学习平台 - 邮箱验证码'
+    msg['Subject'] = '小五智能助手 - 邮箱验证码'
     msg.attach(MIMEText(f'你的验证码是：{code}，有效期{Config.EMAIL_CODE_EXPIRY_MINUTES}分钟。', 'plain', 'utf-8'))
     msg.attach(MIMEText(_build_html_email('邮箱验证', body_html), 'html', 'utf-8'))
 
@@ -102,6 +102,7 @@ def send_verification_email(email_address):
 def send_study_reminder(email_address, study_day):
     """发送学习提醒邮件，返回 (success, message)"""
     body_html = f"""
+    <p style="margin:0 0 6px;font-size:13px;color:#7B9BF4;font-weight:600;">📚 法语学习助手 · 来自小五智能助手</p>
     <p style="margin:0 0 20px;">Bonjour !</p>
     <p style="margin:0 0 8px;">今天是法语学习的<strong>第 {study_day} 天</strong>，今天的学习内容已经准备好了。</p>
     <p style="margin:0 0 28px;color:#5E6478;">点击下方按钮开始今天的学习吧！</p>
@@ -114,8 +115,8 @@ def send_study_reminder(email_address, study_day):
     msg = MIMEMultipart('alternative')
     msg['From'] = Config.SMTP_USER
     msg['To'] = email_address
-    msg['Subject'] = f'法语学习提醒 - 第{study_day}天'
-    msg.attach(MIMEText(f'今天是法语学习第{study_day}天，打开 https://xiaowu.quest 开始学习吧！', 'plain', 'utf-8'))
+    msg['Subject'] = f'法语学习提醒 - 第{study_day}天 | 小五智能助手'
+    msg.attach(MIMEText(f'[法语学习助手 · 来自小五智能助手] 今天是法语学习第{study_day}天，打开 https://xiaowu.quest 开始学习吧！', 'plain', 'utf-8'))
     msg.attach(MIMEText(_build_html_email(f'第 {study_day} 天学习提醒', body_html), 'html', 'utf-8'))
 
     try:
