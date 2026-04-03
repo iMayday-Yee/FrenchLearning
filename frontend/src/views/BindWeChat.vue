@@ -5,14 +5,22 @@
       <h2>绑定微信公众号</h2>
       <p class="desc">扫描二维码关注公众号，接收每日学习提醒</p>
 
-      <div v-if="errorMsg" class="error-msg">
-        <p>{{ errorMsg }}</p>
-      </div>
-
-      <div class="qrcode-area" v-if="!bound && !errorMsg">
-        <img v-if="qrUrl" :src="qrUrl" alt="微信二维码">
-        <div v-else class="loading-placeholder">
-          <span class="spinner"></span>
+      <div class="qrcode-area">
+        <!-- 加载中状态 -->
+        <div v-if="loading" class="loading-state">
+          <div class="spinner-ring"></div>
+          <p class="loading-tip">正在生成二维码...</p>
+        </div>
+        <!-- 二维码 -->
+        <img v-else-if="qrUrl" :src="qrUrl" alt="微信二维码" class="qr-img">
+        <!-- 错误状态 -->
+        <div v-else-if="errorMsg" class="error-state">
+          <p>{{ errorMsg }}</p>
+        </div>
+        <!-- 加载超时 -->
+        <div v-else-if="loadTimeout" class="timeout-state">
+          <p class="timeout-tip">二维码生成超时</p>
+          <p class="timeout-sub">请稍后重试，或跳过绑定</p>
         </div>
       </div>
 
@@ -22,7 +30,7 @@
       </div>
 
       <div class="actions">
-        <button v-if="!bound" @click="skipBind" class="btn-skip">跳过，稍后绑定</button>
+        <button v-if="canSkip" @click="skipBind" class="btn-skip">跳过，稍后绑定</button>
         <button v-if="bound" @click="goNext" class="btn-next">继续</button>
       </div>
     </div>
@@ -40,44 +48,75 @@ const toast = useToastStore()
 const qrUrl = ref('')
 const bound = ref(false)
 const errorMsg = ref('')
+const loading = ref(false)
+const loadTimeout = ref(false)
+const canSkip = ref(false)
 const userId = localStorage.getItem('pending_user_id')
 let pollInterval = null
+let loadTimer = null
+let qrShownAt = null  // 二维码显示时间
 
 const loadQRCode = async () => {
+  loading.value = true
+  loadTimeout.value = false
+
+  // 10秒超时
+  loadTimer = setTimeout(() => {
+    loading.value = false
+    loadTimeout.value = true
+  }, 10000)
+
   try {
     const res = await api.get(`/get_bind_qrcode?user_id=${userId}`)
+    clearTimeout(loadTimer)
+    loading.value = false
     if (res.code === 200) {
       if (res.already_bound) {
         bound.value = true
         return
       }
       qrUrl.value = res.qr_url
+      qrShownAt = Date.now()
     }
   } catch (e) {
+    clearTimeout(loadTimer)
+    loading.value = false
     if (e.response?.status === 503) {
       errorMsg.value = e.response.data.message || '公众号暂不可用'
     } else {
-      toast.error('二维码加载失败，可跳过此步')
+      errorMsg.value = '二维码加载失败，可跳过此步'
     }
   }
 }
 
-const skipBind = () => { stopPoll(); router.push('/agreement') }
-const goNext = () => { stopPoll(); router.push('/agreement') }
-const stopPoll = () => { if (pollInterval) { clearInterval(pollInterval); pollInterval = null } }
+const skipBind = () => { stopAll(); router.push('/agreement') }
+const goNext = () => { stopAll(); router.push('/agreement') }
+const stopAll = () => {
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null }
+  if (loadTimer) { clearTimeout(loadTimer); loadTimer = null }
+}
 
 onMounted(() => {
   if (!userId) { router.push('/register'); return }
   loadQRCode()
+  // 轮询绑定状态，同时检测是否可跳过（二维码显示超过20秒后才可跳过）
   pollInterval = setInterval(async () => {
     try {
-      const res = await api.get(`/bindcheck?user_id=${userId}`)
-      if (res.bound) { bound.value = true; stopPoll(); setTimeout(() => router.push('/agreement'), 1500) }
-    } catch (e) { if (e.response?.status === 429) stopPoll() }
+      const res = await api.get(`/bind_status?user_id=${userId}`)
+      if (res.status === 'bound') {
+        bound.value = true
+        stopAll()
+        setTimeout(() => router.push('/agreement'), 1500)
+      } else if (res.can_skip && qrShownAt && Date.now() - qrShownAt > 20000) {
+        canSkip.value = true
+      }
+    } catch (e) {
+      if (e.response?.status === 429) stopAll()
+    }
   }, 3000)
-  setTimeout(() => stopPoll(), 180000)
+  setTimeout(() => stopAll(), 180000)
 })
-onUnmounted(() => stopPoll())
+onUnmounted(() => stopAll())
 </script>
 
 <style scoped>
@@ -124,18 +163,31 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #fafafa;
 }
-.qrcode-area img { width: 100%; height: 100%; object-fit: contain; }
-.loading-placeholder { color: var(--ink-faint); }
-.spinner {
-  display: inline-block;
-  width: 24px; height: 24px;
-  border: 2px solid var(--border);
+.qr-img { width: 100%; height: 100%; object-fit: contain; }
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+.spinner-ring {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
   border-top-color: var(--accent);
   border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+.loading-tip { color: var(--ink-muted); font-size: 0.8rem; margin: 0; }
+.error-state, .timeout-state {
+  padding: 1rem;
+  text-align: center;
+}
+.error-state p, .timeout-tip { color: var(--rose, #ef6461); font-size: 0.85rem; margin: 0 0 0.25rem; }
+.timeout-sub { color: var(--ink-muted); font-size: 0.75rem; margin: 0; }
 .success-msg {
   display: flex;
   align-items: center;

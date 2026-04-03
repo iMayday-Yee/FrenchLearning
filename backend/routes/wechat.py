@@ -85,6 +85,30 @@ def bindcheck():
     })
 
 
+@wechat_bp.route('/bind_status', methods=['GET'])
+@limiter.limit("200 per minute")
+def bind_status():
+    """查询绑定状态详细信息，用于前端判断是否可以跳过"""
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({'code': 400, 'message': 'user_id required'}), 400
+
+    user = db.session.get(User, int(user_id))
+    if not user:
+        return jsonify({'code': 404, 'message': 'User not found'}), 404
+
+    # 已绑定
+    if user.wechat_openid:
+        return jsonify({'code': 200, 'status': 'bound', 'can_skip': False})
+
+    # 未绑定，但有 account_index（说明二维码已生成）
+    if user.wechat_account_index:
+        return jsonify({'code': 200, 'status': 'pending', 'can_skip': True})
+
+    # 从未分配过公众号（二维码还没生成过）
+    return jsonify({'code': 200, 'status': 'init', 'can_skip': True})
+
+
 @wechat_bp.route('/wechat/callback', methods=['GET', 'POST'])
 def wechat_callback():
     """微信服务器回调（所有公众号共用）"""
