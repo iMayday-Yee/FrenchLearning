@@ -11,7 +11,7 @@ study_bp = Blueprint('study', __name__)
 def _build_material_messages_for_enter(words, study_day, base_url=''):
     """供 study/enter 使用，与 build_material_messages 逻辑一致"""
     messages = []
-    messages.append({"type": "text", "content": "好的，这是今天要学习的3个法语单词，请跟着音频练习吧！"})
+    messages.append({"type": "text", "content": "这是今天要学习的3个法语单词，请跟着音频练习吧！"})
     for i, word in enumerate(words):
         audio_path = word['audio']
         if not audio_path.startswith('http'):
@@ -26,11 +26,11 @@ def _build_material_messages_for_enter(words, study_day, base_url=''):
                 "word_index": i
             }
         })
-    messages.append({"type": "text", "content": "以上是今天的3个单词，请跟着音频练习发音吧！点击每个单词旁边的🎤按钮录制你的跟读。可以多跟读几次哦。"})
+    messages.append({"type": "text", "content": "以上是今天的3个单词，请跟着音频练习发音吧！点击每个单词旁边的麦克风按钮录制你的跟读。可以多跟读几次哦。"})
     if study_day == 5:
         messages.append({
             "type": "text",
-            "content": "📢 今日学习内容已发送完毕！\n\n第5天测评已开启，请点击下方「开始测评」按钮，输入框上方的蓝色横幅，检验你这5天的学习成果吧 🎯"
+            "content": "今日学习内容已发送完毕！\n\n今天是第5天，测评已开启，请在学习完今天的内容后点击下方「开始测评」按钮参加测评，检验你这5天的学习成果吧！"
         })
     return messages
 
@@ -142,7 +142,7 @@ def study_enter():
             return jsonify({'auto_messages': []})
         # 如果之前拒绝了，发送邀请（用户想再试一次）
         if today_status.rejected:
-            msg_content = "您好！您现在想要练习法语吗？我可以给您发送今天的练习音频 😊"
+            msg_content = "您好！您现在想要练习法语吗？我可以给您发送今天的练习音频"
             today_status.invitation_sent = True
             today_status.rejected = False
             db.session.commit()
@@ -153,7 +153,7 @@ def study_enter():
             db.session.commit()
             return jsonify({'auto_messages': [{"type": "text", "content": msg_content}]})
         # 首次进入或 IDLE 状态，发送邀请
-        msg_content = "您好！您现在想要练习法语吗？我可以给您发送今天的练习音频 😊"
+        msg_content = "您好！您现在想要练习法语吗？我可以给您发送今天的练习音频"
         today_status.invitation_sent = True
         db.session.commit()
         # 保存到数据库

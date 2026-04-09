@@ -107,7 +107,7 @@ onMounted(() => {
         bound.value = true
         stopAll()
         setTimeout(() => router.push('/agreement'), 1500)
-      } else if (res.can_skip && qrShownAt && Date.now() - qrShownAt > 20000) {
+      } else if (res.can_skip && qrShownAt && Date.now() - qrShownAt > 60000) {
         canSkip.value = true
       }
     } catch (e) {

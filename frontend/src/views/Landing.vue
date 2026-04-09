@@ -3,7 +3,7 @@
     <div class="container">
       <div class="pill fade-up" style="animation-delay:0.1s">Hi there !</div>
       <h1 class="title fade-up" style="animation-delay:0.2s">小五智能助手</h1>
-      <p class="subtitle fade-up" style="animation-delay:0.3s">你的智能学习与效率伙伴</p>
+      <p class="subtitle fade-up" style="animation-delay:0.3s">你的智能伙伴</p>
       <div class="actions fade-up" style="animation-delay:0.4s">
         <router-link to="/login" class="btn btn-primary">登录</router-link>
         <router-link to="/register" class="btn btn-soft">注册账号</router-link>

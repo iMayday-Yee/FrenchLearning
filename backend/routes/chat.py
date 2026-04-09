@@ -40,7 +40,7 @@ def load_words_json():
 def build_material_messages(words, study_day, base_url=''):
     """构建学习材料消息"""
     messages = []
-    messages.append({"type": "text", "content": "好的，这是今天要学习的3个法语单词，请跟着音频练习吧！"})
+    messages.append({"type": "text", "content": "这是今天要学习的3个法语单词，请跟着音频练习吧！"})
 
     for i, word in enumerate(words):
         audio_path = word['audio']
@@ -57,13 +57,13 @@ def build_material_messages(words, study_day, base_url=''):
             }
         })
 
-    messages.append({"type": "text", "content": "以上是今天的3个单词，请跟着音频练习发音吧！点击每个单词旁边的🎤按钮录制你的跟读。可以多跟读几次哦。"})
+    messages.append({"type": "text", "content": "以上是今天的3个单词，请跟着音频练习发音吧！点击每个单词旁边的麦克风按钮录制你的跟读。可以多跟读几次哦。"})
 
     # Day 5 追加测评提醒
     if study_day == 5:
         messages.append({
             "type": "text",
-            "content": "📢 今日学习内容已发送完毕！\n\n第5天测评已开启，请点击下方「开始测评」按钮，输入框上方的蓝色横幅，检验你这5天的学习成果吧 🎯"
+            "content": "今日学习内容已发送完毕！\n\n今天是第5天，测评已开启，请在学习完今天的内容后点击下方「开始测评」按钮参加测评，检验你这5天的学习成果吧！"
         })
 
     return messages
@@ -86,7 +86,7 @@ def send_message():
 
     if today_status.conversation_rounds >= 20:
         return jsonify({
-            'messages': [{"type": "text", "content": "今天的对话次数已用完啦，明天再来继续学习吧！😊"}],
+            'messages': [{"type": "text", "content": "今天的对话次数已用完啦，明天再来继续学习吧！"}],
             'remaining_rounds': 0
         })
 
@@ -189,6 +189,23 @@ def send_message():
         today_status.practice_count += 1
         today_status.conversation_rounds += 1
         db.session.commit()
+
+    elif intent == 'unrelated_chat':
+        # 后端直接返回固定文案，不依赖 LLM 生成
+        unrelated_reply = "当前话题不在测试范围，我们只聊法语相关内容哦~"
+        assistant_msg_db = ChatMessage(
+            user_id=user_id,
+            study_day=study_day,
+            role='assistant',
+            content_type='text',
+            content=unrelated_reply
+        )
+        db.session.add(assistant_msg_db)
+        db.session.commit()
+        return jsonify({
+            'messages': [{"type": "text", "content": unrelated_reply}],
+            'remaining_rounds': 20 - today_status.conversation_rounds
+        })
 
     else:
         today_status.conversation_rounds += 1
