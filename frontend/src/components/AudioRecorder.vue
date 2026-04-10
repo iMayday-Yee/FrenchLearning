@@ -1,6 +1,6 @@
 <template>
   <div class="recorder">
-    <button :class="['record-btn', { recording: isRecording, 'recording-active': isRecording, disabled: disabled }]" @mousedown.prevent="startRecording" @mouseup.prevent="stopRecording" @mouseleave="stopRecording" @touchstart.prevent="startRecording" @touchend.prevent="stopRecording" :disabled="disabled" :title="isRecording ? '松开发送' : '按住说话'">
+    <button :class="['record-btn', { recording: isRecording, 'recording-active': isRecording, disabled: disabled }]" @pointerdown.prevent="startRecording" @pointerup.prevent="stopRecording" @lostpointercapture="stopRecording" @contextmenu.prevent :disabled="disabled" :title="isRecording ? '松开发送' : '按住说话'">
       <div class="rec-inner">
         <svg v-if="!isRecording" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
         <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
@@ -22,13 +22,31 @@ const emit = defineEmits(['recorded'])
 const isRecording = ref(false)
 let mediaRecorder = null
 let audioChunks = []
-let holdTimer = null  // 短按超时，区分短按 vs 按住
+let pendingStop = false
 
-const startRecording = async () => {
+const startRecording = async (e) => {
   if (props.disabled || isRecording.value) return
-  holdTimer = setTimeout(() => { holdTimer = null }, 300)
+
+  // Pointer capture: 保证 pointerup 一定在此按钮上触发，不管手指滑到哪
+  const btn = e.target.closest('button')
+  if (btn && e.pointerId !== undefined) {
+    btn.setPointerCapture(e.pointerId)
+  }
+
+  pendingStop = false
+  mediaRecorder = null
+  isRecording.value = true
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+
+    if (pendingStop) {
+      stream.getTracks().forEach(track => track.stop())
+      isRecording.value = false
+      pendingStop = false
+      return
+    }
+
     mediaRecorder = new MediaRecorder(stream)
     audioChunks = []
     mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data)
@@ -38,22 +56,23 @@ const startRecording = async () => {
       stream.getTracks().forEach(track => track.stop())
     }
     mediaRecorder.start()
-    isRecording.value = true
   } catch (e) {
-    clearTimeout(holdTimer)
+    isRecording.value = false
+    pendingStop = false
     alert('无法访问麦克风，请检查权限设置')
   }
 }
 
 const stopRecording = () => {
-  if (!mediaRecorder || !isRecording.value) return
-  // 按住时间不足 300ms 视为误触，不停止
-  if (holdTimer) {
-    clearTimeout(holdTimer)
-    holdTimer = null
+  if (!isRecording.value) return
+
+  if (!mediaRecorder || mediaRecorder.state !== 'recording') {
+    pendingStop = true
     return
   }
+
   mediaRecorder.stop()
+  mediaRecorder = null
   isRecording.value = false
 }
 </script>
@@ -81,7 +100,7 @@ const stopRecording = () => {
   overflow: visible;
   -webkit-user-select: none;
   user-select: none;
-  touch-action: manipulation;
+  touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
 .record-btn:hover:not(:disabled) {

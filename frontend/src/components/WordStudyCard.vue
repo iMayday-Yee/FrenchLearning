@@ -11,11 +11,10 @@
       <AudioPlayer :url="data.audio_url" :word="data.french" />
       <button
         class="rec-btn"
-        @mousedown.prevent="startRecording"
-        @mouseup.prevent="stopRecording"
-        @mouseleave="stopRecording"
-        @touchstart.prevent="startRecording"
-        @touchend.prevent="stopRecording"
+        @pointerdown.prevent="startRecording"
+        @pointerup.prevent="stopRecording"
+        @lostpointercapture="stopRecording"
+        @contextmenu.prevent
         :class="{ recording: isRecording, 'recording-active': isRecording }"
         :disabled="disabled"
         :title="isRecording ? '松开发送' : '按住说话'"
@@ -46,16 +45,30 @@ const emit = defineEmits(['recorded'])
 const isRecording = ref(false)
 let mediaRecorder = null
 let audioChunks = []
-let holdTimer = null        // 短按超时，用于区分短按 vs 按住
+let pendingStop = false
 
-const startRecording = async () => {
+const startRecording = async (e) => {
   if (props.disabled || isRecording.value) return
 
-  // 300ms 内手指松开视为误触，不停止
-  holdTimer = setTimeout(() => { holdTimer = null }, 300)
+  const btn = e.target.closest('button')
+  if (btn && e.pointerId !== undefined) {
+    btn.setPointerCapture(e.pointerId)
+  }
+
+  pendingStop = false
+  mediaRecorder = null
+  isRecording.value = true
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+
+    if (pendingStop) {
+      stream.getTracks().forEach(track => track.stop())
+      isRecording.value = false
+      pendingStop = false
+      return
+    }
+
     mediaRecorder = new MediaRecorder(stream)
     audioChunks = []
     mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data)
@@ -65,24 +78,23 @@ const startRecording = async () => {
       stream.getTracks().forEach(track => track.stop())
     }
     mediaRecorder.start()
-    isRecording.value = true
   } catch (e) {
-    clearTimeout(holdTimer)
+    isRecording.value = false
+    pendingStop = false
     toast.error('无法访问麦克风，请检查权限')
   }
 }
 
 const stopRecording = () => {
-  if (!mediaRecorder || !isRecording.value) return
+  if (!isRecording.value) return
 
-  // 按住时间不足 300ms 视为误触，不停止
-  if (holdTimer) {
-    clearTimeout(holdTimer)
-    holdTimer = null
+  if (!mediaRecorder || mediaRecorder.state !== 'recording') {
+    pendingStop = true
     return
   }
 
   mediaRecorder.stop()
+  mediaRecorder = null
   isRecording.value = false
 }
 </script>
@@ -159,7 +171,7 @@ const stopRecording = () => {
   -webkit-user-select: none;
   user-select: none;
   overflow: visible;
-  touch-action: manipulation;
+  touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
 .rec-btn:hover:not(:disabled) {
