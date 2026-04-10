@@ -124,61 +124,52 @@ def send_message():
         or any(kw in content for kw in ['开始学习', '开始练习', '发给我', '给我发', '要学习', '发卡片'])
     )
     accept_keywords = ['好的', '好啊', '行', '行啊', '可以', '来吧', '开始吧', '好呀', '嗯', 'ok', 'OK']
+    reject_keywords = ['不了', '不要', '不用', '不想', '等会', '等一下', '算了', '下次', '晚点', '不用了', '不要了', '不想学']
     if want_material:
         intent = 'request_material'
-    elif today_status.invitation_sent and any(kw in content for kw in accept_keywords):
+    elif today_status.invitation_sent and not today_status.material_sent and any(kw in content for kw in accept_keywords):
         intent = 'accept_learning'
+    elif today_status.invitation_sent and not today_status.material_sent and any(kw in content for kw in reject_keywords):
+        intent = 'reject_learning'
 
     logger.warning(f"[CHAT] user={user_id} day={study_day} intent={intent} content={content[:30]} material_sent={today_status.material_sent}")
 
     assistant_msgs = []
 
-    if intent == 'request_material':
-        words_data = load_words_json()
-        day_words = next((d for d in words_data if d['day'] == study_day), None)
-        logger.warning(f"[CHAT] request_material: day_words={'found' if day_words else 'NONE'} for day={study_day}")
-        if day_words:
-            is_first_send = not today_status.material_sent
-            today_status.material_sent = True
-            material_msgs = build_material_messages(day_words['words'], study_day, base_url=request.host_url.rstrip('/'))
-            for msg in material_msgs:
-                content_type = msg['type']
-                actual_content = msg['content'] if isinstance(msg['content'], str) else json.dumps(msg['content'])
-                assistant_msg = ChatMessage(
-                    user_id=user_id,
-                    study_day=study_day,
-                    role='assistant',
-                    content_type=content_type,
-                    content=actual_content
-                )
-                db.session.add(assistant_msg)
-                assistant_msgs.append(msg)
+    if intent in ('request_material', 'accept_learning'):
+        if today_status.material_sent:
+            # 今天已发送过，不再重复发送
+            already_reply = "今天的学习音频已经发送在上方了哦~可以翻看上方的单词卡片进行跟读练习！"
+            assistant_msg_db = ChatMessage(
+                user_id=user_id,
+                study_day=study_day,
+                role='assistant',
+                content_type='text',
+                content=already_reply
+            )
+            db.session.add(assistant_msg_db)
             db.session.commit()
-            if not is_first_send:
-                assistant_msgs = [msg for msg in assistant_msgs if msg['type'] != 'text' or '今天的3个' not in msg.get('content', '')]
-
-    elif intent == 'accept_learning':
-        words_data = load_words_json()
-        day_words = next((d for d in words_data if d['day'] == study_day), None)
-        if day_words:
-            is_first_send = not today_status.material_sent
-            today_status.material_sent = True
-            material_msgs = build_material_messages(day_words['words'], study_day, base_url=request.host_url.rstrip('/'))
-            for msg in material_msgs:
-                content_type = msg['type']
-                actual_content = msg['content'] if isinstance(msg['content'], str) else json.dumps(msg['content'])
-                assistant_msg = ChatMessage(
-                    user_id=user_id,
-                    study_day=study_day,
-                    role='assistant',
-                    content_type=content_type,
-                    content=actual_content
-                )
-                db.session.add(assistant_msg)
-                assistant_msgs.append(msg)
-            db.session.commit()
-            if not is_first_send:
-                assistant_msgs = [msg for msg in assistant_msgs if msg['type'] != 'text' or '今天的3个' not in msg.get('content', '')]
+            assistant_msgs = [{"type": "text", "content": already_reply}]
+        else:
+            words_data = load_words_json()
+            day_words = next((d for d in words_data if d['day'] == study_day), None)
+            logger.warning(f"[CHAT] {intent}: day_words={'found' if day_words else 'NONE'} for day={study_day}")
+            if day_words:
+                today_status.material_sent = True
+                material_msgs = build_material_messages(day_words['words'], study_day, base_url=request.host_url.rstrip('/'))
+                for msg in material_msgs:
+                    content_type = msg['type']
+                    actual_content = msg['content'] if isinstance(msg['content'], str) else json.dumps(msg['content'])
+                    assistant_msg = ChatMessage(
+                        user_id=user_id,
+                        study_day=study_day,
+                        role='assistant',
+                        content_type=content_type,
+                        content=actual_content
+                    )
+                    db.session.add(assistant_msg)
+                    assistant_msgs.append(msg)
+                db.session.commit()
 
     elif intent == 'reject_learning':
         today_status.rejected = True
