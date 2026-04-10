@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
-from models import User, AssessmentAnswer, AssessmentSummary
+from models import User, AssessmentAnswer, AssessmentSummary, SurveyResponse
 import json
 import os
 import random
@@ -31,6 +31,36 @@ def check_assessment():
         return jsonify({'code': 200, 'can_take': True, 'already_completed': False})
 
     return jsonify({'code': 200, 'can_take': False, 'already_completed': False})
+
+@assessment_bp.route('/assessment/survey', methods=['POST'])
+@jwt_required()
+def submit_survey():
+    """提交问卷评分"""
+    user_id = int(get_jwt_identity())
+
+    existing = SurveyResponse.query.filter_by(user_id=user_id).first()
+    if existing:
+        return jsonify({'code': 400, 'message': '问卷已提交过'}), 400
+
+    data = request.get_json()
+    fields = ['satisfaction', 'helpfulness', 'content_quality', 'ease_of_use', 'willingness']
+    for f in fields:
+        v = data.get(f)
+        if not v or not (1 <= int(v) <= 5):
+            return jsonify({'code': 400, 'message': f'评分项 {f} 无效'}), 400
+
+    survey = SurveyResponse(
+        user_id=user_id,
+        satisfaction=int(data['satisfaction']),
+        helpfulness=int(data['helpfulness']),
+        content_quality=int(data['content_quality']),
+        ease_of_use=int(data['ease_of_use']),
+        willingness=int(data['willingness'])
+    )
+    db.session.add(survey)
+    db.session.commit()
+
+    return jsonify({'code': 200, 'message': '问卷提交成功'})
 
 @assessment_bp.route('/assessment/questions', methods=['GET'])
 @jwt_required()
