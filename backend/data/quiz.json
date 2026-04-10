@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "french": "bonjour",
+    "options": ["你好", "谢谢", "书", "电话"],
+    "answer": "你好"
+  },
+  {
+    "id": 2,
+    "french": "merci",
+    "options": ["再见", "谢谢", "钢笔", "水果"],
+    "answer": "谢谢"
+  },
+  {
+    "id": 3,
+    "french": "au revoir",
+    "options": ["牛奶", "再见", "桌子", "什么时候"],
+    "answer": "再见"
+  },
+  {
+    "id": 4,
+    "french": "salut",
+    "options": ["你好/再见", "奶酪", "门", "坏"],
+    "answer": "你好/再见"
+  },
+  {
+    "id": 5,
+    "french": "oui",
+    "options": ["汽车", "哪里", "是", "苹果"],
+    "answer": "是"
+  },
+  {
+    "id": 6,
+    "french": "non",
+    "options": ["不", "椅子", "天", "谢谢"],
+    "answer": "不"
+  },
+  {
+    "id": 7,
+    "french": "bonsoir",
+    "options": ["钢笔", "晚上好", "汽车", "谁"],
+    "answer": "晚上好"
+  },
+  {
+    "id": 8,
+    "french": "bon appétit",
+    "options": ["再见", "祝你好胃口", "桌子", "哪里"],
+    "answer": "祝你好胃口"
+  },
+  {
+    "id": 9,
+    "french": "ça va",
+    "options": ["书", "不", "你好吗？/我很好", "水果"],
+    "answer": "你好吗？/我很好"
+  },
+  {
+    "id": 10,
+    "french": "bien",
+    "options": ["好", "门", "什么", "牛奶"],
+    "answer": "好"
+  },
+  {
+    "id": 11,
+    "french": "mal",
+    "options": ["椅子", "坏", "是", "苹果"],
+    "answer": "坏"
+  },
+  {
+    "id": 12,
+    "french": "qui",
+    "options": ["谁", "奶酪", "再见", "窗户"],
+    "answer": "谁"
+  },
+  {
+    "id": 13,
+    "french": "quoi",
+    "options": ["桌子", "谢谢", "什么", "汽车"],
+    "answer": "什么"
+  },
+  {
+    "id": 14,
+    "french": "où",
+    "options": ["电话", "坏", "水果", "哪里"],
+    "answer": "哪里"
+  },
+  {
+    "id": 15,
+    "french": "quand",
+    "options": ["门", "什么时候", "牛奶", "是"],
+    "answer": "什么时候"
+  }
+]

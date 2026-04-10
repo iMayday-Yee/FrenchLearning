@@ -65,33 +65,10 @@ def submit_survey():
 @assessment_bp.route('/assessment/questions', methods=['GET'])
 @jwt_required()
 def get_questions():
-    """获取测评题目"""
-    words_data = load_words_json()
-    day1_5_words = []
-    for day_data in words_data[:5]:
-        for word in day_data['words']:
-            day1_5_words.append({
-                'french': word['french'],
-                'chinese': word['chinese'],
-                'audio': f"/static/audio/{word['audio']}"
-            })
-
-    all_chinese = [w['chinese'] for w in day1_5_words]
-
-    questions = []
-    for i, word in enumerate(day1_5_words):
-        options = random.sample([c for c in all_chinese if c != word['chinese']], 3)
-        options.append(word['chinese'])
-        random.shuffle(options)
-
-        questions.append({
-            'id': i + 1,
-            'french': word['french'],
-            'options': options,
-            'audio_url': word['audio']
-        })
-
-    random.shuffle(questions)
+    """获取测评题目（固定题库）"""
+    quiz_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'quiz.json')
+    with open(quiz_file, 'r', encoding='utf-8') as f:
+        questions = json.load(f)
 
     return jsonify({'code': 200, 'questions': questions})
 
@@ -103,11 +80,10 @@ def submit_assessment():
     data = request.get_json()
     answers = data.get('answers', [])
 
-    words_data = load_words_json()
-    word_map = {}
-    for day_data in words_data[:5]:
-        for word in day_data['words']:
-            word_map[word['french']] = word['chinese']
+    quiz_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'quiz.json')
+    with open(quiz_file, 'r', encoding='utf-8') as f:
+        quiz_data = json.load(f)
+    word_map = {q['french']: q['answer'] for q in quiz_data}
 
     correct_count = 0
     total_count = len(answers)

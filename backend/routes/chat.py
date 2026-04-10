@@ -100,10 +100,23 @@ def send_message():
     db.session.add(user_msg)
     db.session.commit()
 
-    # Day 5: 检测"开始测评"指令（必须在材料已发送且测评未解锁时）
-    if study_day == 5 and today_status.material_sent and not today_status.assessment_unlocked:
+    # 检测"开始测评"指令
+    if '开始测评' in content:
         from models import AssessmentSummary
-        if '开始测评' in content and not AssessmentSummary.query.filter_by(user_id=user_id).first():
+        if AssessmentSummary.query.filter_by(user_id=user_id).first():
+            done_reply = "你已经完成测评了，不需要重复测评哦~"
+            assistant_msg = ChatMessage(
+                user_id=user_id, study_day=study_day,
+                role='assistant', content_type='text',
+                content=done_reply
+            )
+            db.session.add(assistant_msg)
+            db.session.commit()
+            return jsonify({
+                'messages': [{"type": "text", "content": done_reply}],
+                'remaining_rounds': 20 - today_status.conversation_rounds
+            })
+        if study_day == 5 and today_status.material_sent and not today_status.assessment_unlocked:
             today_status.assessment_unlocked = True
             db.session.commit()
             unlock_reply = "好的，测评已准备就绪！请点击下方的「开始测评」按钮开始吧！"
