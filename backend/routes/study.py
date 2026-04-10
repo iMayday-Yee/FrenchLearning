@@ -30,7 +30,7 @@ def _build_material_messages_for_enter(words, study_day, base_url=''):
     if study_day == 5:
         messages.append({
             "type": "text",
-            "content": "今日学习内容已发送完毕！\n\n今天是第5天，测评已开启，请在学习完今天的内容后点击下方「开始测评」按钮参加测评，检验你这5天的学习成果吧！"
+            "content": "今天是第五天，测评已开启，请在完成今日学习并准备好后，向我发送\u201c开始测评\u201d获取测评内容吧！如果没有准备好也没关系，稍后我再来问问你吧！"
         })
     return messages
 
@@ -101,7 +101,7 @@ def get_status():
             need_assessment = False
         else:
             today_status_check = get_today_status(user_id, study_day)
-            need_assessment = today_status_check.material_sent
+            need_assessment = today_status_check.assessment_unlocked
     else:
         need_assessment = False
 
@@ -127,6 +127,22 @@ def study_enter():
         return jsonify({'auto_messages': []})
 
     today_status = get_today_status(user_id, study_day)
+
+    # Day 5: 材料已发送但测评未解锁，每次进入/刷新都重新提示（三组通用）
+    if study_day == 5 and today_status.material_sent and not today_status.assessment_unlocked:
+        from models import AssessmentSummary
+        if not AssessmentSummary.query.filter_by(user_id=user_id).first():
+            msg_content = "今天是第五天，测评已开启，请在完成今日学习并准备好后，向我发送\u201c开始测评\u201d获取测评内容吧！如果没有准备好也没关系，稍后我再来问问你吧！"
+            # 如果最后一条消息已经是这段提示，就不重复发
+            last_msg = ChatMessage.query.filter_by(user_id=user_id, study_day=study_day)\
+                .order_by(ChatMessage.timestamp.desc()).first()
+            if last_msg and last_msg.role == 'assistant' and '开始测评' in last_msg.content and '向我发送' in last_msg.content:
+                return jsonify({'auto_messages': []})
+            msg = ChatMessage(user_id=user_id, study_day=study_day, role='assistant',
+                              content_type='text', content=msg_content)
+            db.session.add(msg)
+            db.session.commit()
+            return jsonify({'auto_messages': [{"type": "text", "content": msg_content}]})
 
     if user.group_type == 'low':
         # low 组：不主动发送，等用户主动请求

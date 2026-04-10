@@ -32,6 +32,12 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        # 数据库迁移：为已有表添加新字段
+        try:
+            db.session.execute(db.text('ALTER TABLE daily_status ADD COLUMN assessment_unlocked BOOLEAN DEFAULT 0'))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
         init_system_config(app)
         init_group_slots(app)
         init_wechat_accounts(app)

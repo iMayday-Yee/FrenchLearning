@@ -63,7 +63,7 @@ def build_material_messages(words, study_day, base_url=''):
     if study_day == 5:
         messages.append({
             "type": "text",
-            "content": "今日学习内容已发送完毕！\n\n今天是第5天，测评已开启，请在学习完今天的内容后点击下方「开始测评」按钮参加测评，检验你这5天的学习成果吧！"
+            "content": "今天是第五天，测评已开启，请在完成今日学习并准备好后，向我发送\u201c开始测评\u201d获取测评内容吧！如果没有准备好也没关系，稍后我再来问问你吧！"
         })
 
     return messages
@@ -100,6 +100,25 @@ def send_message():
     db.session.add(user_msg)
     db.session.commit()
 
+    # Day 5: 检测"开始测评"指令（必须在材料已发送且测评未解锁时）
+    if study_day == 5 and today_status.material_sent and not today_status.assessment_unlocked:
+        from models import AssessmentSummary
+        if '开始测评' in content and not AssessmentSummary.query.filter_by(user_id=user_id).first():
+            today_status.assessment_unlocked = True
+            db.session.commit()
+            unlock_reply = "好的，测评已准备就绪！请点击下方的「开始测评」按钮开始吧！"
+            assistant_msg = ChatMessage(
+                user_id=user_id, study_day=study_day,
+                role='assistant', content_type='text',
+                content=unlock_reply
+            )
+            db.session.add(assistant_msg)
+            db.session.commit()
+            return jsonify({
+                'messages': [{"type": "text", "content": unlock_reply}],
+                'remaining_rounds': 20 - today_status.conversation_rounds
+            })
+
     today_messages = ChatMessage.query.filter_by(
         user_id=user_id,
         study_day=study_day
@@ -118,13 +137,10 @@ def send_message():
     reply_text = parsed.get('reply', '好的，请继续练习吧！')
     intent = parsed.get('intent', 'other')
 
-    # 关键词兜底：组合匹配，用户要求学习材料时强制覆盖意图
-    want_material = (
-        ('单词' in content and any(v in content for v in ['发', '给', '要', '学', '来', '看', '练']))
-        or any(kw in content for kw in ['开始学习', '开始练习', '发给我', '给我发', '要学习', '发卡片'])
-    )
+    # 关键词兜底：仅匹配最明确的请求，其余交给 LLM 判断
+    want_material = any(kw in content for kw in ['发卡片', '发单词卡', '要学习材料'])
     accept_keywords = ['好的', '好啊', '行', '行啊', '可以', '来吧', '开始吧', '好呀', '嗯', 'ok', 'OK']
-    reject_keywords = ['不了', '不要', '不用', '不想', '等会', '等一下', '算了', '下次', '晚点', '不用了', '不要了', '不想学']
+    reject_keywords = ['不了', '不用了', '不要了', '不想学', '算了', '先不了', '先别了']
     if want_material:
         intent = 'request_material'
     elif today_status.invitation_sent and not today_status.material_sent and any(kw in content for kw in accept_keywords):
@@ -133,6 +149,11 @@ def send_message():
         intent = 'reject_learning'
 
     logger.warning(f"[CHAT] user={user_id} day={study_day} intent={intent} content={content[:30]} material_sent={today_status.material_sent}")
+
+    # 用户回复了邀请但没有接受 → 清除邀请锁，下次刷新可重新邀请
+    if today_status.invitation_sent and intent not in ('accept_learning', 'request_material'):
+        today_status.invitation_sent = False
+        db.session.commit()
 
     assistant_msgs = []
 

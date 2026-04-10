@@ -122,9 +122,7 @@ const sendMessage = async () => {
       })
     }
     remainingRounds.value = res.remaining_rounds
-    if (res.messages && res.messages.some(m => m.type === 'word_audio')) {
-      await studyStore.fetchStatus()
-    }
+    await studyStore.fetchStatus()
   } catch (e) {
     chatMessages.value = chatMessages.value.filter(m => m.id !== thinkingMsgId.value)
     toast.error('消息发送失败，请重试')

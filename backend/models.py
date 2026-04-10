@@ -33,6 +33,7 @@ class DailyStatus(db.Model):
     invalid_audio_count = db.Column(db.Integer, default=0)
     conversation_rounds = db.Column(db.Integer, default=0)
     reminder_sent = db.Column(db.Boolean, default=False)
+    assessment_unlocked = db.Column(db.Boolean, default=False)
     __table_args__ = (db.UniqueConstraint('user_id', 'study_day'),)
 
 class ChatMessage(db.Model):
