@@ -53,7 +53,7 @@ const handleLogin = async () => {
     if (res.code === 200) {
       await userStore.setLogin(res)
       await userStore.fetchProfile()
-      router.push('/home')
+      router.push('/chat')
     }
   } catch (e) {
     const msg = e.response?.data?.message

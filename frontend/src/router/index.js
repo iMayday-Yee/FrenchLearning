@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   { path: '/', component: () => import('@/views/Landing.vue') },
-  { path: '/home', component: () => import('@/views/ToolSelect.vue'), meta: { auth: true } },
+  { path: '/home', redirect: '/chat' },
   { path: '/register', component: () => import('@/views/Register.vue') },
   { path: '/bindwechat', component: () => import('@/views/BindWeChat.vue') },
   { path: '/agreement', component: () => import('@/views/Agreement.vue') },
@@ -36,9 +36,9 @@ router.beforeEach(async (to, from) => {
     return '/admin'
   }
 
-  // 已登录用户访问落地页，跳转到工具选择页
+  // 已登录用户访问落地页，直接跳转到聊天页
   if (to.path === '/' && store.token) {
-    return '/home'
+    return '/chat'
   }
 
   // 注册页面检查：如果是第11天起，不允许注册
