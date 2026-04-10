@@ -170,7 +170,7 @@
         </select>
         <select v-model="filterDay">
           <option value="">全部天数</option>
-          <option v-for="d in 10" :key="d" :value="d">Day {{ d }}</option>
+          <option v-for="d in 12" :key="d" :value="d">Day {{ d }}</option>
         </select>
       </div>
       <div class="user-stats-table-wrapper">
@@ -224,7 +224,7 @@
               <tr v-if="expandedUsers.includes(u.user_id)" class="detail-row">
                 <td :colspan="filterDay ? 8 : 9">
                   <div class="day-grid">
-                    <div v-for="d in 10" :key="d" class="day-card" :class="{ 'has-material': getUserDayStatus(u.user_id, d)?.material_sent }">
+                    <div v-for="d in 12" :key="d" class="day-card" :class="{ 'has-material': getUserDayStatus(u.user_id, d)?.material_sent }">
                       <div class="day-title">Day {{ d }}</div>
                       <div class="day-info">
                         <span v-if="getUserDayStatus(u.user_id, d)">
@@ -254,7 +254,7 @@
       <h2>学习资源管理</h2>
       <div class="day-tabs">
         <button
-          v-for="d in 10" :key="d"
+          v-for="d in 12" :key="d"
           :class="['tab', { active: selectedDay === d }]"
           @click="selectDay(d)"
         >Day {{ d }}</button>

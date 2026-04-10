@@ -41,7 +41,7 @@ def get_study_day(user_id):
     delta = (date.today() - start).days + 1
     if delta < 1:
         return 0
-    if delta > 10:
+    if delta > 12:
         return -1
     return delta
 
@@ -66,7 +66,7 @@ def can_register():
     start = date.fromisoformat(start_cfg.value)
     delta = (date.today() - start).days + 1
     return jsonify({
-        'can_register': delta <= 10,
+        'can_register': delta <= 12,
         'study_start_date': start_cfg.value
     })
 
@@ -105,7 +105,7 @@ def get_status():
     else:
         need_assessment = False
 
-    today_status = get_today_status(user_id, study_day) if 1 <= study_day <= 10 else None
+    today_status = get_today_status(user_id, study_day) if 1 <= study_day <= 12 else None
 
     return jsonify({
         'study_day': study_day,
@@ -123,7 +123,7 @@ def study_enter():
     user = db.session.get(User, user_id)
     study_day = get_study_day(user_id)
 
-    if study_day < 1 or study_day > 10:
+    if study_day < 1 or study_day > 12:
         return jsonify({'auto_messages': []})
 
     today_status = get_today_status(user_id, study_day)
@@ -195,7 +195,7 @@ def study_enter():
 def get_words():
     """获取某天的单词数据"""
     day = request.args.get('day', type=int)
-    if not day or day < 1 or day > 10:
+    if not day or day < 1 or day > 12:
         return jsonify({'code': 400, 'message': 'Invalid day'}), 400
 
     words_file = os.path.join(os.path.dirname(__file__), '..', 'data', 'words.json')

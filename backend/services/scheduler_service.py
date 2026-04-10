@@ -17,7 +17,7 @@ def check_and_send_reminders(app):
             return
         start = date.fromisoformat(start_cfg.value)
         study_day = (date.today() - start).days + 1
-        if study_day < 1 or study_day > 10:
+        if study_day < 1 or study_day > 12:
             return
 
         # 精确到分钟：当前时间对应的 time_slot，如 "22:30"

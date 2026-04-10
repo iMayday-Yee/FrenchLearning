@@ -207,8 +207,8 @@ def get_words():
 @admin_required
 def update_words(day):
     """更新某天的单词数据"""
-    if day < 1 or day > 10:
-        return jsonify({'code': 400, 'message': '天数必须在1-10之间'}), 400
+    if day < 1 or day > 12:
+        return jsonify({'code': 400, 'message': '天数必须在1-12之间'}), 400
 
     data = request.get_json()
     words = data.get('words', [])
@@ -247,8 +247,8 @@ def update_words(day):
 @admin_required
 def upload_word_audio(day):
     """上传单词音频"""
-    if day < 1 or day > 10:
-        return jsonify({'code': 400, 'message': '天数必须在1-10之间'}), 400
+    if day < 1 or day > 12:
+        return jsonify({'code': 400, 'message': '天数必须在1-12之间'}), 400
 
     if 'audio' not in request.files:
         return jsonify({'code': 400, 'message': '没有音频文件'}), 400

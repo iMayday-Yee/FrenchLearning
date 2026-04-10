@@ -18,7 +18,7 @@ def get_study_day(user_id):
     start = date.fromisoformat(start_date_str)
     delta = (date.today() - start).days + 1
     if delta < 1: return 0
-    if delta > 10: return -1
+    if delta > 12: return -1
     return delta
 
 def get_today_status(user_id, study_day):
@@ -76,7 +76,7 @@ def send_message():
     user = db.session.get(User, user_id)
     study_day = get_study_day(user_id)
 
-    if study_day < 1 or study_day > 10:
+    if study_day < 1 or study_day > 12:
         return jsonify({'code': 400, 'messages': [], 'remaining_rounds': 0})
 
     data = request.get_json()
@@ -259,7 +259,7 @@ def upload_audio():
     user_id = int(get_jwt_identity())
     study_day = get_study_day(user_id)
 
-    if study_day < 1 or study_day > 10:
+    if study_day < 1 or study_day > 12:
         return jsonify({'code': 400, 'messages': [], 'remaining_rounds': 0})
 
     if 'audio' not in request.files:

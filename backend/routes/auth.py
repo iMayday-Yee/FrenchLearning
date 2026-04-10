@@ -55,13 +55,13 @@ def verify_email():
 @auth_bp.route('/register', methods=['POST'])
 def register():
     """用户注册接口"""
-    # 检查学习是否已开始（防止第11天后注册）
+    # 检查学习是否已开始（防止第13天后注册）
     start_cfg = db.session.get(SystemConfig, 'study_start_date')
     if start_cfg:
         from datetime import date
         start = date.fromisoformat(start_cfg.value)
         delta = (date.today() - start).days + 1
-        if delta > 10:
+        if delta > 12:
             return jsonify({'code': 400, 'message': '学习已结束，暂不支持注册'}), 400
 
     data = request.get_json()

@@ -43,10 +43,10 @@ onMounted(async () => {
 const endDate = computed(() => {
   if (studyStartDate.value) {
     const start = new Date(studyStartDate.value)
-    start.setDate(start.getDate() + 9)
+    start.setDate(start.getDate() + 11)
     return start.toISOString().split('T')[0]
   }
-  return '10天学习周期'
+  return '12天学习周期'
 })
 
 const logout = () => {
