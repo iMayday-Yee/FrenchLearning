@@ -45,7 +45,7 @@ def get_bind_qrcode():
     if not account:
         return jsonify({
             'code': 503,
-            'message': '当前公众号关注数量已达上限，请通过邮箱及时接收相关通知哦~'
+            'message': '当前公众号关注数量已达上限，请通过邮箱及时接收相关通知~'
         }), 503
 
     scene_str = f"bind_{user_id}"

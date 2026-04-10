@@ -57,7 +57,7 @@ def build_material_messages(words, study_day, base_url=''):
             }
         })
 
-    messages.append({"type": "text", "content": "以上是今天的3个单词，先点击播放按钮听标准发音，然后按住麦克风按钮跟读，松开后录音会自动上传。每个单词可以多练几次哦！"})
+    messages.append({"type": "text", "content": "以上是今天的3个单词，先点击播放按钮听标准发音，然后按住麦克风按钮跟读，松开后录音会自动上传。每个单词可以多练几次！"})
 
     # Day 5 追加测评提醒
     if study_day == 5:
@@ -104,7 +104,7 @@ def send_message():
     if '开始测评' in content:
         from models import AssessmentSummary
         if AssessmentSummary.query.filter_by(user_id=user_id).first():
-            done_reply = "你已经完成测评了，不需要重复测评哦~"
+            done_reply = "你已经完成测评了，不需要重复测评~"
             assistant_msg = ChatMessage(
                 user_id=user_id, study_day=study_day,
                 role='assistant', content_type='text',
@@ -173,7 +173,7 @@ def send_message():
     if intent in ('request_material', 'accept_learning'):
         if today_status.material_sent:
             # 今天已发送过，不再重复发送
-            already_reply = "今天的学习音频已经发送在上方了哦~可以翻看上方的单词卡片进行跟读练习！"
+            already_reply = "今天的学习音频已经发送在上方了~可以翻看上方的单词卡片进行跟读练习！"
             assistant_msg_db = ChatMessage(
                 user_id=user_id,
                 study_day=study_day,
@@ -217,7 +217,7 @@ def send_message():
 
     elif intent == 'unrelated_chat':
         # 后端直接返回固定文案，不依赖 LLM 生成
-        unrelated_reply = "当前话题不在测试范围，我们只聊法语相关内容哦~"
+        unrelated_reply = "当前话题不在测试范围，我们只聊法语相关内容~"
         assistant_msg_db = ChatMessage(
             user_id=user_id,
             study_day=study_day,
