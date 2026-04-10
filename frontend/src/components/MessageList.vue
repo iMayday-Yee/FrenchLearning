@@ -1,25 +1,27 @@
 <template>
   <div class="message-list" ref="listEl">
-    <div class="day-divider">
-      <span class="divider-line"></span>
-      <span class="divider-pill">Jour {{ studyDay }}</span>
-      <span class="divider-line"></span>
-    </div>
-    <ChatBubble
-      v-for="msg in messages"
-      :key="msg.id || msg.timestamp"
-      :content="msg.content"
-      :type="msg.type"
-      :isUser="msg.role === 'user'"
-      :disabled="isDisabled"
-      :avatarType="avatarType"
-      @recorded="(blob, idx) => $emit('recorded', blob, idx)"
-    />
+    <template v-for="(msgs, day) in groupedMessages" :key="day">
+      <div class="day-divider">
+        <span class="divider-line"></span>
+        <span class="divider-pill">Jour {{ day }}</span>
+        <span class="divider-line"></span>
+      </div>
+      <ChatBubble
+        v-for="msg in msgs"
+        :key="msg.id || msg.timestamp"
+        :content="msg.content"
+        :type="msg.type"
+        :isUser="msg.role === 'user'"
+        :disabled="isDisabled"
+        :avatarType="avatarType"
+        @recorded="(blob, idx) => $emit('recorded', blob, idx)"
+      />
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import ChatBubble from './ChatBubble.vue'
 
 const props = defineProps({
@@ -31,6 +33,17 @@ const props = defineProps({
 
 defineEmits(['recorded'])
 const listEl = ref(null)
+
+// 按 study_day 分组，供展示用
+const groupedMessages = computed(() => {
+  const groups = {}
+  for (const msg of props.messages) {
+    const day = msg.study_day || props.studyDay
+    if (!groups[day]) groups[day] = []
+    groups[day].push(msg)
+  }
+  return groups
+})
 
 watch(() => props.messages.length, () => {
   nextTick(() => {

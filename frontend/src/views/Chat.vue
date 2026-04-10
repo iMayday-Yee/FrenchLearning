@@ -77,8 +77,17 @@ const thinkingMsgId = ref(null)
 
 const loadHistory = async () => {
   try {
-    const res = await api.get('/chat/history')
-    chatMessages.value = res.messages || []
+    // 加载所有历史天数，供展示用；发消息给 LLM 时仍只用当天记录
+    const today = studyDay.value
+    const promises = []
+    for (let d = 1; d <= today; d++) {
+      promises.push(api.get(`/chat/history?day=${d}`))
+    }
+    const results = await Promise.all(promises)
+    const allMessages = results.flatMap(r => r.messages || [])
+    // 按时间排序
+    allMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+    chatMessages.value = allMessages
   } catch (e) {
     toast.error('聊天记录加载失败')
   }

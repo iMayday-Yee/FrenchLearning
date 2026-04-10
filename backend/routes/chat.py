@@ -255,6 +255,7 @@ def get_history():
             'role': msg.role,
             'type': msg.content_type,
             'content': content,
+            'study_day': msg.study_day,
             'timestamp': msg.timestamp.isoformat()
         })
 
