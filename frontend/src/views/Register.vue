@@ -204,7 +204,7 @@ const handleRegister = async () => {
     if (res.code === 200) {
       localStorage.setItem('pending_user_id', res.user_id)
       if (res.study_start_date) localStorage.setItem('study_start_date', res.study_start_date)
-      router.push('/bindwechat')
+      router.push('/agreement')
     }
   } catch (e) {
     toast.error(e.response?.data?.message || '注册失败，请稍后重试')
