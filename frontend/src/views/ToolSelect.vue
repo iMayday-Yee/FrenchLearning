@@ -11,7 +11,7 @@
         <div class="tool-card" @click="goToFrench">
           <span class="tool-icon">🇫🇷</span>
           <div class="tool-info">
-            <div class="tool-name">法语学习助手</div>
+            <div class="tool-name">小五智能助手</div>
             <div class="tool-desc">每天三个词，轻松开启你的法语之旅</div>
           </div>
           <svg class="tool-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
