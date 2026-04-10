@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, Response
 from extensions import db
-from models import User, DailyStatus, ChatMessage, AudioRecord, AssessmentSummary, GroupSlot, SystemConfig, WechatAccount
+from models import User, DailyStatus, ChatMessage, AudioRecord, AssessmentSummary, SurveyResponse, GroupSlot, SystemConfig, WechatAccount
 from config import Config
 import csv
 import io
@@ -192,6 +192,27 @@ def export_assessment():
         writer.writerow([user.id, user.nickname, user.group_type, user.avatar_type, summary.correct_count, summary.total_count])
 
     return Response(output.getvalue(), mimetype='text/csv', headers={'Content-Disposition': 'attachment; filename=assessment_export.csv'})
+
+@admin_bp.route('/admin/export/survey', methods=['GET'])
+@admin_required
+def export_survey():
+    """导出问卷评分CSV"""
+    results = db.session.query(
+        SurveyResponse, User
+    ).join(User).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['user_id', 'nickname', 'group_type', 'avatar_type',
+                     'satisfaction', 'helpfulness', 'content_quality', 'ease_of_use', 'willingness', 'created_at'])
+
+    for survey, user in results:
+        writer.writerow([user.id, user.nickname, user.group_type, user.avatar_type,
+                         survey.satisfaction, survey.helpfulness, survey.content_quality,
+                         survey.ease_of_use, survey.willingness, survey.created_at])
+
+    return Response(output.getvalue(), mimetype='text/csv',
+                    headers={'Content-Disposition': 'attachment; filename=survey_export.csv'})
 
 @admin_bp.route('/admin/words', methods=['GET'])
 @admin_required

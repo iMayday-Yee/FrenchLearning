@@ -290,6 +290,7 @@
         <button @click="exportData('chat')">聊天记录</button>
         <button @click="exportData('daily')">每日数据</button>
         <button @click="exportData('assessment')">测评成绩</button>
+        <button @click="exportData('survey')">问卷评分</button>
       </div>
     </div>
 
