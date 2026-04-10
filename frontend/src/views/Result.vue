@@ -10,6 +10,7 @@
       </div>
       <div class="score-label">答对题数</div>
       <div class="comment">{{ comment }}</div>
+      <p class="after-note">恭喜你完成了五天的学习！接下来平台仍将开放一周，你可以随时回来继续学习。</p>
       <button class="btn-continue" @click="goToChat">继续学习</button>
     </div>
   </div>
@@ -117,7 +118,16 @@ h2 {
   font-size: 1.15rem;
   font-style: italic;
   color: var(--ink-secondary);
-  margin-bottom: 2rem;
+  margin-bottom: 1.2rem;
+}
+.after-note {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  line-height: 1.6;
+  margin-bottom: 1.8rem;
+  padding: 0.8rem 1rem;
+  background: var(--bg);
+  border-radius: var(--radius);
 }
 .btn-continue {
   width: 100%;

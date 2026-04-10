@@ -57,7 +57,7 @@ def build_material_messages(words, study_day, base_url=''):
             }
         })
 
-    messages.append({"type": "text", "content": "以上是今天的3个单词，请跟着音频练习发音吧！点击每个单词旁边的麦克风按钮录制你的跟读。可以多跟读几次哦。"})
+    messages.append({"type": "text", "content": "以上是今天的3个单词，先点击播放按钮听标准发音，然后按住麦克风按钮跟读，松开后录音会自动上传。每个单词可以多练几次哦！"})
 
     # Day 5 追加测评提醒
     if study_day == 5:
