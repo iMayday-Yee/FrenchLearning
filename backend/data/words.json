@@ -1,52 +1,314 @@
 [
-  {"day": 1, "words": [
-    {"index": 1, "french": "bonjour", "chinese": "你好", "phonetic": "/bɔ̃.ʒuʁ/", "audio": "day1/1-1.mp3"},
-    {"index": 2, "french": "merci", "chinese": "谢谢", "phonetic": "/mɛʁ.si/", "audio": "day1/1-2.mp3"},
-    {"index": 3, "french": "au revoir", "chinese": "再见", "phonetic": "/o ʁə.vwaʁ/", "audio": "day1/1-3.mp3"}
-  ]},
-  {"day": 2, "words": [
-    {"index": 1, "french": "salut", "chinese": "你好/再见", "phonetic": "/sa.ly/", "audio": "day2/2-1.mp3"},
-    {"index": 2, "french": "oui", "chinese": "是", "phonetic": "/wi/", "audio": "day2/2-2.mp3"},
-    {"index": 3, "french": "non", "chinese": "不", "phonetic": "/nɔ̃/", "audio": "day2/2-3.mp3"}
-  ]},
-  {"day": 3, "words": [
-    {"index": 1, "french": "bonne nuit", "chinese": "晚安", "phonetic": "/bɔn nɥi/", "audio": "day3/3-1.mp3"},
-    {"index": 2, "french": "s'il vous plaît", "chinese": "请", "phonetic": "/sil vu plɛ/", "audio": "day3/3-2.mp3"},
-    {"index": 3, "french": "excusez-moi", "chinese": "对不起/打扰一下", "phonetic": "/ɛk.sky.ze mwa/", "audio": "day3/3-3.mp3"}
-  ]},
-  {"day": 4, "words": [
-    {"index": 1, "french": "comment allez-vous", "chinese": "你好吗", "phonetic": "/kɔ.mɑ̃ ta.le vu/", "audio": "day4/4-1.mp3"},
-    {"index": 2, "french": "très bien", "chinese": "很好", "phonetic": "/tʁɛ bjɛ̃/", "audio": "day4/4-2.mp3"},
-    {"index": 3, "french": "je m'appelle", "chinese": "我叫", "phonetic": "/ʒə ma.pɛl/", "audio": "day4/4-3.mp3"}
-  ]},
-  {"day": 5, "words": [
-    {"index": 1, "french": "enchanté", "chinese": "很高兴认识你", "phonetic": "/ɑ̃.ʃɑ̃.te/", "audio": "day5/5-1.mp3"},
-    {"index": 2, "french": "où", "chinese": "哪里", "phonetic": "/u/", "audio": "day5/5-2.mp3"},
-    {"index": 3, "french": "ici", "chinese": "这里", "phonetic": "/i.si/", "audio": "day5/5-3.mp3"}
-  ]},
-  {"day": 6, "words": [
-    {"index": 1, "french": "maison", "chinese": "房子", "phonetic": "/mɛ.zɔ̃/", "audio": "day6/6-1.mp3"},
-    {"index": 2, "french": "travail", "chinese": "工作", "phonetic": "/tʁa.vaj/", "audio": "day6/6-2.mp3"},
-    {"index": 3, "french": "famille", "chinese": "家庭", "phonetic": "/fa.mij/", "audio": "day6/6-3.mp3"}
-  ]},
-  {"day": 7, "words": [
-    {"index": 1, "french": "ami", "chinese": "朋友", "phonetic": "/a.mi/", "audio": "day7/7-1.mp3"},
-    {"index": 2, "french": "amour", "chinese": "爱", "phonetic": "/a.muʁ/", "audio": "day7/7-2.mp3"},
-    {"index": 3, "french": "temps", "chinese": "时间/天气", "phonetic": "/tɑ̃/", "audio": "day7/7-3.mp3"}
-  ]},
-  {"day": 8, "words": [
-    {"index": 1, "french": "jour", "chinese": "天", "phonetic": "/ʒuʁ/", "audio": "day8/8-1.mp3"},
-    {"index": 2, "french": "mois", "chinese": "月", "phonetic": "/mwa/", "audio": "day8/8-2.mp3"},
-    {"index": 3, "french": "année", "chinese": "年", "phonetic": "/a.ne/", "audio": "day8/8-3.mp3"}
-  ]},
-  {"day": 9, "words": [
-    {"index": 1, "french": "eau", "chinese": "水", "phonetic": "/o/", "audio": "day9/9-1.mp3"},
-    {"index": 2, "french": "pain", "chinese": "面包", "phonetic": "/pɛ̃/", "audio": "day9/9-2.mp3"},
-    {"index": 3, "french": "vin", "chinese": "葡萄酒", "phonetic": "/vɛ̃/", "audio": "day9/9-3.mp3"}
-  ]},
-  {"day": 10, "words": [
-    {"index": 1, "french": "livre", "chinese": "书", "phonetic": "/livʁ/", "audio": "day10/10-1.mp3"},
-    {"index": 2, "french": "stylo", "chinese": "笔", "phonetic": "/sti.lo/", "audio": "day10/10-2.mp3"},
-    {"index": 3, "french": "papier", "chinese": "纸", "phonetic": "/pa.pje/", "audio": "day10/10-3.mp3"}
-  ]}
+  {
+    "day": 1,
+    "words": [
+      {
+        "index": 1,
+        "french": "bonjour",
+        "chinese": "你好",
+        "phonetic": "/bɔ̃.ʒuʁ/",
+        "audio": "day1/1-1.mp3"
+      },
+      {
+        "index": 2,
+        "french": "merci",
+        "chinese": "谢谢",
+        "phonetic": "/mɛʁ.si/",
+        "audio": "day1/1-2.mp3"
+      },
+      {
+        "index": 3,
+        "french": "au revoir",
+        "chinese": "再见",
+        "phonetic": "/o ʁə.vwaʁ/",
+        "audio": "day1/1-3.mp3"
+      }
+    ]
+  },
+  {
+    "day": 2,
+    "words": [
+      {
+        "index": 1,
+        "french": "salut",
+        "chinese": "你好/再见",
+        "phonetic": "/sa.ly/",
+        "audio": "day2/2-1.mp3"
+      },
+      {
+        "index": 2,
+        "french": "oui",
+        "chinese": "是",
+        "phonetic": "/wi/",
+        "audio": "day2/2-2.mp3"
+      },
+      {
+        "index": 3,
+        "french": "non",
+        "chinese": "不",
+        "phonetic": "/nɔ̃/",
+        "audio": "day2/2-3.mp3"
+      }
+    ]
+  },
+  {
+    "day": 3,
+    "words": [
+      {
+        "index": 1,
+        "french": "bonsoir",
+        "chinese": "晚上好",
+        "phonetic": "/bɔ̃swaʁ/",
+        "audio": "day3/3-1.mp3"
+      },
+      {
+        "index": 2,
+        "french": "bon appétit",
+        "chinese": "祝你好胃口",
+        "phonetic": "/bɔ̃ a.pe.ti/",
+        "audio": "day3/3-2.mp3"
+      },
+      {
+        "index": 3,
+        "french": "ça va",
+        "chinese": "你好吗？/我很好",
+        "phonetic": "/sa va/",
+        "audio": "day3/3-3.mp3"
+      }
+    ]
+  },
+  {
+    "day": 4,
+    "words": [
+      {
+        "index": 1,
+        "french": "bien",
+        "chinese": "好",
+        "phonetic": "/bjɛ̃/",
+        "audio": "day4/4-1.mp3"
+      },
+      {
+        "index": 2,
+        "french": "mal",
+        "chinese": "坏",
+        "phonetic": "/mal/",
+        "audio": "day4/4-2.mp3"
+      },
+      {
+        "index": 3,
+        "french": "qui",
+        "chinese": "谁",
+        "phonetic": "/ki/",
+        "audio": "day4/4-3.mp3"
+      }
+    ]
+  },
+  {
+    "day": 5,
+    "words": [
+      {
+        "index": 1,
+        "french": "quoi",
+        "chinese": "什么",
+        "phonetic": "/kwa/",
+        "audio": "day5/5-1.mp3"
+      },
+      {
+        "index": 2,
+        "french": "où",
+        "chinese": "哪里",
+        "phonetic": "/u/",
+        "audio": "day5/5-2.mp3"
+      },
+      {
+        "index": 3,
+        "french": "quand",
+        "chinese": "什么时候",
+        "phonetic": "/kɑ̃/",
+        "audio": "day5/5-3.mp3"
+      }
+    ]
+  },
+  {
+    "day": 6,
+    "words": [
+      {
+        "index": 1,
+        "french": "comment",
+        "chinese": "怎么",
+        "phonetic": "/kɔmɑ̃/",
+        "audio": "day6/6-1.mp3"
+      },
+      {
+        "index": 2,
+        "french": "livre",
+        "chinese": "书",
+        "phonetic": "/livʁ/",
+        "audio": "day6/6-2.mp3"
+      },
+      {
+        "index": 3,
+        "french": "stylo",
+        "chinese": "钢笔",
+        "phonetic": "/stilo/",
+        "audio": "day6/6-3.mp3"
+      }
+    ]
+  },
+  {
+    "day": 7,
+    "words": [
+      {
+        "index": 1,
+        "french": "table",
+        "chinese": "桌子",
+        "phonetic": "/tabl/",
+        "audio": "day7/7-1.mp3"
+      },
+      {
+        "index": 2,
+        "french": "chaise",
+        "chinese": "椅子",
+        "phonetic": "/ʃɛz/",
+        "audio": "day7/7-2.mp3"
+      },
+      {
+        "index": 3,
+        "french": "porte",
+        "chinese": "门",
+        "phonetic": "/pɔʁt/",
+        "audio": "day7/7-3.mp3"
+      }
+    ]
+  },
+  {
+    "day": 8,
+    "words": [
+      {
+        "index": 1,
+        "french": "fenêtre",
+        "chinese": "窗户",
+        "phonetic": "/f(ə)nɛtʁ/",
+        "audio": "day8/8-1.mp3"
+      },
+      {
+        "index": 2,
+        "french": "téléphone",
+        "chinese": "电话",
+        "phonetic": "/telefɔn/",
+        "audio": "day8/8-2.mp3"
+      },
+      {
+        "index": 3,
+        "french": "voiture",
+        "chinese": "汽车",
+        "phonetic": "/vwatyʁ/",
+        "audio": "day8/8-3.mp3"
+      }
+    ]
+  },
+  {
+    "day": 9,
+    "words": [
+      {
+        "index": 1,
+        "french": "lait",
+        "chinese": "牛奶",
+        "phonetic": "/lɛ/",
+        "audio": "day9/9-1.mp3"
+      },
+      {
+        "index": 2,
+        "french": "jus",
+        "chinese": "汁",
+        "phonetic": "/ʒy/",
+        "audio": "day9/9-2.mp3"
+      },
+      {
+        "index": 3,
+        "french": "fruit",
+        "chinese": "水果",
+        "phonetic": "/fʀɥi/",
+        "audio": "day9/9-3.mp3"
+      }
+    ]
+  },
+  {
+    "day": 10,
+    "words": [
+      {
+        "index": 1,
+        "french": "fromage",
+        "chinese": "奶酪",
+        "phonetic": "/frɔma:ʒ/",
+        "audio": "day10/10-1.mp3"
+      },
+      {
+        "index": 2,
+        "french": "pomme",
+        "chinese": "苹果",
+        "phonetic": "/pɔm/",
+        "audio": "day10/10-2.mp3"
+      },
+      {
+        "index": 3,
+        "french": "jour",
+        "chinese": "天",
+        "phonetic": "/ʒuʁ/",
+        "audio": "day10/10-3.mp3"
+      }
+    ]
+  },
+  {
+    "day": 11,
+    "words": [
+      {
+        "index": 1,
+        "french": "nuit",
+        "chinese": "夜晚",
+        "phonetic": "/nɥi/",
+        "audio": "day11/11-1.mp3"
+      },
+      {
+        "index": 2,
+        "french": "matin",
+        "chinese": "早晨",
+        "phonetic": "/matɛ̃/",
+        "audio": "day11/11-2.mp3"
+      },
+      {
+        "index": 3,
+        "french": "soir",
+        "chinese": "晚上",
+        "phonetic": "/swaʀ/",
+        "audio": "day11/11-3.mp3"
+      }
+    ]
+  },
+  {
+    "day": 12,
+    "words": [
+      {
+        "index": 1,
+        "french": "ici",
+        "chinese": "这里",
+        "phonetic": "/isi/",
+        "audio": "day12/12-1.mp3"
+      },
+      {
+        "index": 2,
+        "french": "là",
+        "chinese": "那里",
+        "phonetic": "/la/",
+        "audio": "day12/12-2.mp3"
+      },
+      {
+        "index": 3,
+        "french": "chez",
+        "chinese": "在…家",
+        "phonetic": "/ʃe/",
+        "audio": "day12/12-3.mp3"
+      }
+    ]
+  }
 ]
