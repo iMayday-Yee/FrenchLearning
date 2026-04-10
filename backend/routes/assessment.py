@@ -123,6 +123,70 @@ def submit_assessment():
         'total_count': total_count
     })
 
+@assessment_bp.route('/assessment/pronunciation_words', methods=['GET'])
+@jwt_required()
+def get_pronunciation_words():
+    """获取发音测评单词列表（Day1-5的全部单词）"""
+    words_data = load_words_json()
+    words = []
+    for day_data in words_data[:5]:
+        for word in day_data['words']:
+            words.append({
+                'french': word['french'],
+                'chinese': word['chinese'],
+                'phonetic': word.get('phonetic', ''),
+                'audio_url': f"/static/audio/{word['audio']}"
+            })
+    return jsonify({'code': 200, 'words': words})
+
+@assessment_bp.route('/assessment/upload_pronunciation', methods=['POST'])
+@jwt_required()
+def upload_pronunciation():
+    """上传发音测评录音"""
+    user_id = int(get_jwt_identity())
+
+    if 'audio' not in request.files:
+        return jsonify({'code': 400, 'message': 'No audio file'}), 400
+
+    audio_file = request.files['audio']
+    word_index = request.form.get('word_index', type=int, default=0)
+    target_word = request.form.get('target_word', '')
+
+    from config import Config
+    from models import AudioRecord
+    import time
+
+    user_dir = os.path.join(Config.UPLOAD_FOLDER, str(user_id), 'assessment')
+    os.makedirs(user_dir, exist_ok=True)
+
+    # 删除该用户同一单词的旧录音（文件+记录）
+    old_records = AudioRecord.query.filter_by(user_id=user_id, study_day=0, word_index=word_index).all()
+    for old in old_records:
+        try:
+            if os.path.exists(old.audio_path):
+                os.remove(old.audio_path)
+        except OSError:
+            pass
+        db.session.delete(old)
+    db.session.commit()
+
+    filename = f"pron_{word_index}_{int(time.time())}.webm"
+    filepath = os.path.join(user_dir, filename)
+    audio_file.save(filepath)
+
+    record = AudioRecord(
+        user_id=user_id,
+        study_day=0,
+        word_index=word_index,
+        target_word=target_word,
+        audio_path=filepath,
+        is_valid=True
+    )
+    db.session.add(record)
+    db.session.commit()
+
+    return jsonify({'code': 200, 'message': '录音已保存'})
+
 @assessment_bp.route('/assessment/result', methods=['GET'])
 @jwt_required()
 def get_result():
