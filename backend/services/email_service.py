@@ -104,7 +104,7 @@ def send_study_reminder(email_address, study_day):
     body_html = f"""
     <p style="margin:0 0 6px;font-size:13px;color:#7B9BF4;font-weight:600;">来自小五智能助手</p>
     <p style="margin:0 0 8px;">今天是测试的第<strong>{study_day}/5</strong>天。</p>
-    <p style="margin:0 0 28px;color:#5E6478;">在你方便的时候，点击下方按钮开始与小五交流法语学习吧！</p>
+    <p style="margin:0 0 28px;color:#5E6478;">在你方便的时候，点击下方按钮开始与小五交流吧！</p>
     <div style="text-align:center;margin:0 0 24px;">
       <a href="https://xiaowu.quest" style="display:inline-block;padding:12px 36px;background:linear-gradient(135deg,#7B9BF4 0%,#98B2F7 100%);border-radius:10px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">开始交流</a>
     </div>
