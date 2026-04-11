@@ -64,7 +64,12 @@ def create_app():
     return app
 
 def init_system_config(app):
-    defaults = {'study_start_date': app.config['STUDY_START_DATE'], 'max_daily_rounds': '20', 'reenter_threshold_minutes': '5'}
+    defaults = {
+        'study_start_date': app.config['STUDY_START_DATE'],
+        'max_daily_rounds': '20',
+        'reenter_threshold_minutes': '5',
+        'llm_api_key': app.config['LLM_API_KEY']
+    }
     for key, value in defaults.items():
         if not db.session.get(SystemConfig, key):
             db.session.add(SystemConfig(key=key, value=value))

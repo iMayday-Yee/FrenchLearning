@@ -60,6 +60,12 @@
         <button class="btn-save" @click="saveStartDate">保存</button>
         <span v-if="startDateMsg" class="save-msg">{{ startDateMsg }}</span>
       </div>
+      <div class="setting-row">
+        <label>LLM API Key</label>
+        <input type="password" v-model="llmApiKey" placeholder="sk-..." style="flex: 1;" />
+        <button class="btn-save" @click="saveLlMApiKey">保存</button>
+        <span v-if="llmApiKeyMsg" class="save-msg">{{ llmApiKeyMsg }}</span>
+      </div>
     </div>
 
     <div class="section">
@@ -417,6 +423,8 @@ const toggleUserDetail = (userId) => {
 
 const startDate = ref('')
 const startDateMsg = ref('')
+const llmApiKey = ref('')
+const llmApiKeyMsg = ref('')
 
 const allWords = ref([])
 const selectedDay = ref(1)
@@ -448,6 +456,7 @@ const loadConfig = async () => {
   try {
     const res = await api.get('/admin/config', adminHeaders())
     startDate.value = res.study_start_date || ''
+    llmApiKey.value = res.llm_api_key || ''
   } catch (e) {
     toast.error('配置加载失败')
   }
@@ -461,6 +470,17 @@ const saveStartDate = async () => {
     setTimeout(() => { startDateMsg.value = '' }, 2000)
   } catch (e) {
     startDateMsg.value = '保存失败'
+  }
+}
+
+const saveLlMApiKey = async () => {
+  if (!llmApiKey.value) return
+  try {
+    await api.post('/admin/config', { key: 'llm_api_key', value: llmApiKey.value }, adminHeaders())
+    llmApiKeyMsg.value = '保存成功'
+    setTimeout(() => { llmApiKeyMsg.value = '' }, 2000)
+  } catch (e) {
+    llmApiKeyMsg.value = '保存失败'
   }
 }
 

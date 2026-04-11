@@ -294,9 +294,11 @@ def upload_word_audio(day):
 def get_config():
     """获取系统配置"""
     start_date = db.session.get(SystemConfig, 'study_start_date')
+    llm_api_key = db.session.get(SystemConfig, 'llm_api_key')
     return jsonify({
         'code': 200,
-        'study_start_date': start_date.value if start_date else ''
+        'study_start_date': start_date.value if start_date else '',
+        'llm_api_key': llm_api_key.value if llm_api_key else ''
     })
 
 

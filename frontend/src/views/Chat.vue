@@ -295,13 +295,14 @@ onMounted(async () => {
   letter-spacing: 0.02em;
 }
 .rounds-tag {
-  padding: 0.2rem 0.6rem;
+  padding: 0.2rem 0.8rem;
   border-radius: var(--radius);
   background: rgba(123,155,244,0.08);
   color: var(--accent);
   font-size: 0.72rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .rounds-banner {

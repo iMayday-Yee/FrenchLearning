@@ -2,9 +2,17 @@ import json
 import re
 import requests
 from config import Config
+from extensions import db
+from models import SystemConfig
 from prompts.system_prompt import SYSTEM_PROMPT
 
 SKIP_CONTENT_TYPES = {'audio', 'user_audio', 'thinking'}
+
+
+def _get_llm_api_key():
+    """获取LLM API Key，优先从数据库读取，否则使用配置文件"""
+    cfg = db.session.get(SystemConfig, 'llm_api_key')
+    return cfg.value if cfg else Config.LLM_API_KEY
 
 def build_messages(user, study_day, today_messages, current_message):
     """构建发送给LLM的消息列表，只保留文本类消息"""
@@ -31,7 +39,7 @@ def build_messages(user, study_day, today_messages, current_message):
 def call_llm(messages):
     """调用硅基流动LLM API"""
     headers = {
-        "Authorization": f"Bearer {Config.LLM_API_KEY}",
+        "Authorization": f"Bearer {_get_llm_api_key()}",
         "Content-Type": "application/json"
     }
     payload = {
