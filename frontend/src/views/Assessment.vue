@@ -35,6 +35,7 @@
         <h2>测试须知</h2>
         <div class="instructions-body">
           <p>接下来你将进行两项测试，检验这5天的学习成果。</p>
+          <p class="red-note">答题正确率不影响报酬发放，请你集中注意力，凭记忆认真完成即可！</p>
           <div class="instructions-section">
             <h3>第一项：词汇含义测试</h3>
             <ul>
@@ -452,6 +453,7 @@ onBeforeUnmount(() => {
 }
 .instructions-body li { margin-bottom: 0.3rem; }
 .instructions-body strong { color: var(--ink); }
+.red-note { color: #e53e3e; font-weight: 600; margin-top: 0.5rem; }
 .instructions-section {
   margin: 1rem 0;
   padding: 0.8rem 1rem;
