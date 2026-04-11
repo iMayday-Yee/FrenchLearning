@@ -2,7 +2,7 @@
   <div :class="['bubble', isUser ? 'user' : 'assistant']">
     <img v-if="!isUser" class="avatar" :src="`/avatars/${avatarType}.png`" alt="助手">
     <div class="bubble-content">
-      <div v-if="type === 'text'" class="text">{{ content }}</div>
+      <div v-if="type === 'text'" class="text" v-html="parsedText"></div>
       <div v-else-if="type === 'thinking'" class="thinking">
         <span class="dot"></span><span class="dot"></span><span class="dot"></span>
       </div>
@@ -40,6 +40,11 @@ const parsedContent = computed(() => {
     try { return JSON.parse(props.content) } catch { return props.content }
   }
   return props.content
+})
+
+const parsedText = computed(() => {
+  if (typeof props.content !== 'string') return props.content
+  return props.content.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
 })
 </script>
 

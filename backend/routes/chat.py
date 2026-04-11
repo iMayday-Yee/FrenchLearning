@@ -63,7 +63,7 @@ def build_material_messages(words, study_day, base_url=''):
     if study_day == 5:
         messages.append({
             "type": "text",
-            "content": "今天是第五天，测评已开启，请在完成今日学习并准备好后，向我发送\u201c开始测评\u201d获取测评内容吧！如果没有准备好也没关系，稍后我再来问问你吧！"
+            "content": "请在完成今日学习后参与测评，请输入**「开始测评」**获取测评内容。如果现在没准备好，稍后我再来问你吧！"
         })
 
     return messages
@@ -119,7 +119,7 @@ def send_message():
         if study_day == 5 and today_status.material_sent and not today_status.assessment_unlocked:
             today_status.assessment_unlocked = True
             db.session.commit()
-            unlock_reply = "好的，测评已准备就绪！请点击下方的「开始测评」按钮开始吧！"
+            unlock_reply = "好的，测评已准备就绪！请点击下方的**「开始测评」**按钮开始吧！"
             assistant_msg = ChatMessage(
                 user_id=user_id, study_day=study_day,
                 role='assistant', content_type='text',

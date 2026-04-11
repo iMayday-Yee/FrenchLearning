@@ -53,7 +53,7 @@
           <li>本协议自您同意之日起生效，未尽事宜，按照相关法律法规执行。</li>
           <li>若您有任何疑问，可与我们沟通。</li>
         </ol>
-        <p class="footer-org">华中科技大学管理学院</p>
+        <p class="footer-org">华中科技大学数智研究小组</p>
       </div>
       <label class="checkbox-row">
         <input type="checkbox" v-model="agreed">

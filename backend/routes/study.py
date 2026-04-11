@@ -30,7 +30,7 @@ def _build_material_messages_for_enter(words, study_day, base_url=''):
     if study_day == 5:
         messages.append({
             "type": "text",
-            "content": "今天是第五天，测评已开启，请在完成今日学习并准备好后，向我发送\u201c开始测评\u201d获取测评内容吧！如果没有准备好也没关系，稍后我再来问问你吧！"
+            "content": "请在完成今日学习后参与测评，请输入**「开始测评」**获取测评内容。如果现在没准备好，稍后我再来问你吧！"
         })
     return messages
 
@@ -132,7 +132,7 @@ def study_enter():
     if study_day == 5 and today_status.material_sent and not today_status.assessment_unlocked:
         from models import AssessmentSummary
         if not AssessmentSummary.query.filter_by(user_id=user_id).first():
-            msg_content = "今天是第五天，测评已开启，请在完成今日学习并准备好后，向我发送\u201c开始测评\u201d获取测评内容吧！如果没有准备好也没关系，稍后我再来问问你吧！"
+            msg_content = "请在完成今日学习后参与测评，请输入**「开始测评」**获取测评内容。如果现在没准备好，稍后我再来问你吧！"
             # 如果最后一条消息已经是这段提示，就不重复发
             last_msg = ChatMessage.query.filter_by(user_id=user_id, study_day=study_day)\
                 .order_by(ChatMessage.timestamp.desc()).first()
