@@ -96,9 +96,12 @@ def get_status():
         phase = 'learning'
 
     if phase == 'learning' and study_day == 5:
-        from models import AssessmentSummary
-        if AssessmentSummary.query.filter_by(user_id=user_id).first():
-            need_assessment = False
+        from models import AssessmentSummary, AudioRecord
+        summary = AssessmentSummary.query.filter_by(user_id=user_id).first()
+        if summary:
+            # 词汇已提交，等发音测评也完成才隐藏横幅
+            pron_done = AudioRecord.query.filter_by(user_id=user_id, study_day=0).first() is not None
+            need_assessment = not pron_done
         else:
             today_status_check = get_today_status(user_id, study_day)
             need_assessment = today_status_check.assessment_unlocked

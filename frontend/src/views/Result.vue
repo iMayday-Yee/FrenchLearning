@@ -10,7 +10,10 @@
       </div>
       <div class="score-label">答对题数</div>
       <div class="comment">{{ comment }}</div>
-      <p class="after-note">恭喜你完成了五天的学习！接下来平台仍将开放一周，你可以随时回来继续学习。</p>
+      <div class="after-note-box">
+        <p class="after-note">我们的测试已经结束，感谢您的参与，我们将在一天内给您发放20元报酬。</p>
+        <p class="after-note-bold">接下来7天，我们的服务器将免费开放，如您有兴趣，欢迎继续使用小五学习法语。</p>
+      </div>
       <button class="btn-continue" @click="goToChat">继续学习</button>
     </div>
   </div>
@@ -120,14 +123,22 @@ h2 {
   color: var(--ink-secondary);
   margin-bottom: 1.2rem;
 }
+.after-note-box {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  margin-bottom: 1.8rem;
+}
 .after-note {
   font-size: 0.82rem;
   color: var(--ink-muted);
   line-height: 1.6;
-  margin-bottom: 1.8rem;
-  padding: 0.8rem 1rem;
-  background: var(--bg);
-  border-radius: var(--radius);
+}
+.after-note-bold {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.6;
 }
 .btn-continue {
   width: 100%;

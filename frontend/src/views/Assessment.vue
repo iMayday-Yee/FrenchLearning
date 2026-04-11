@@ -1,32 +1,57 @@
 <template>
   <div class="assessment-page">
     <div class="container">
-      <!-- Phase 1: 问卷打分 -->
-      <div v-if="phase === 'survey'" class="survey-card fade-up">
+      <!-- Phase 1: App Store 评分 -->
+      <div v-if="phase === 'survey1'" class="survey-card fade-up">
         <span class="tag">Questionnaire</span>
-        <h2>学习体验评价</h2>
-        <p class="survey-desc">请根据你这几天的使用感受，对以下各项进行评分</p>
+        <h2>感谢您的使用，<br>请对小五智能助手打分</h2>
+        <div class="stars-row">
+          <button
+            v-for="n in 7" :key="n"
+            :class="['star-btn', { active: appRating >= n }]"
+            @click="appRating = n"
+          >
+            <svg width="40" height="40" viewBox="0 0 24 24" :fill="appRating >= n ? 'var(--accent)' : 'none'" stroke="var(--accent)" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </button>
+          <span class="stars-label">{{ appRating }}/7</span>
+        </div>
 
-        <div class="survey-items">
-          <div v-for="(item, idx) in surveyItems" :key="idx" class="survey-item">
-            <div class="item-label">{{ item.label }}</div>
-            <div class="rating-row">
-              <span class="rating-hint">不满意</span>
-              <div class="dots">
-                <button
-                  v-for="n in 5" :key="n"
-                  :class="['dot', { active: surveyData[item.key] >= n }]"
-                  @click="surveyData[item.key] = n"
-                >{{ n }}</button>
+        <button class="btn-primary" :disabled="appRating < 1" @click="goToSurvey2">
+          下一页
+        </button>
+      </div>
+
+      <!-- Phase 1b: 量表题（第二页） -->
+      <div v-else-if="phase === 'survey2'" class="survey-card survey-card-long fade-up">
+        <span class="tag">Questionnaire</span>
+        <h2>请对小五智能助手打分</h2>
+
+        <div class="survey-section" v-for="section in surveySections" :key="section.title">
+          <p class="section-lead">{{ section.lead }}</p>
+          <div class="survey-items">
+            <div v-for="item in section.items" :key="item.key" class="survey-item">
+              <div class="item-label">{{ item.label }}</div>
+              <div class="likert-row">
+                <span class="likert-hint">{{ section.left }}</span>
+                <div class="likert-dots">
+                  <button
+                    v-for="n in 7" :key="n"
+                    :class="['likert-dot', { active: surveyData[item.key] === n }]"
+                    @click="surveyData[item.key] = n"
+                  >{{ n }}</button>
+                </div>
+                <span class="likert-hint">{{ section.right }}</span>
               </div>
-              <span class="rating-hint">非常满意</span>
             </div>
           </div>
         </div>
 
-        <button class="btn-primary" :disabled="!surveyComplete" @click="submitSurvey">
-          {{ submittingSurvey ? '提交中...' : '下一步' }}
-        </button>
+        <div class="btn-row">
+          <button class="btn-ghost" @click="phase = 'survey1'">上一页</button>
+          <button class="btn-primary" :disabled="!survey2Complete || submittingSurvey" @click="submitSurvey">
+            {{ submittingSurvey ? '提交中...' : '下一步' }}
+          </button>
+        </div>
       </div>
 
       <!-- Phase 2: 测试须知 -->
@@ -134,25 +159,142 @@ import AssessmentQuestion from '@/components/AssessmentQuestion.vue'
 const router = useRouter()
 const toast = useToastStore()
 
-const phase = ref('survey')
+const phase = ref('survey1')
 const submittingSurvey = ref(false)
+const appRating = ref(0)
 
-// ========== 问卷 ==========
-const surveyItems = [
-  { key: 'satisfaction', label: '学习体验满意度' },
-  { key: 'helpfulness', label: 'AI助手的帮助程度' },
-  { key: 'content_quality', label: '学习内容的实用性' },
-  { key: 'ease_of_use', label: '操作界面的易用性' },
-  { key: 'willingness', label: '继续使用的意愿' }
+// ========== 问卷（两页） ==========
+const surveyData = ref({
+  // App评分（1-5）
+  app_rating: 0,
+  // 第一组
+  q1_service: 0,
+  q1_happy: 0,
+  q1_willingness: 0,
+  // 第二组
+  q2_share: 0,
+  q2_comfort: 0,
+  q2_care: 0,
+  q2_decision: 0,
+  q2_support: 0,
+  // 第三组
+  q3_self_thought: 0,
+  q3_self_decide: 0,
+  q3_responsible: 0,
+  q3_adjust_behavior: 0,
+  q3_adjust_decision: 0,
+  q3_adjust_willingness: 0,
+  // 第四组
+  satisfaction: 0,
+  helpfulness: 0,
+  willingness_to_continue: 0,
+  willingness_to_recommend: 0
+})
+
+const surveySections = [
+  {
+    title: 'group1',
+    lead: '请对下面陈述表达你的看法，1表示非常不同意，7表示非常同意：',
+    left: '1 非常不同意', right: '7 非常同意',
+    items: [
+      { key: 'q1_service', label: '你喜欢小五提供的服务。' },
+      { key: 'q1_happy', label: '你与小五互动得开心。' },
+      { key: 'q1_willingness', label: '你愿意使用小五。' }
+    ]
+  },
+  {
+    title: 'group2',
+    lead: '请对下面陈述表达你的看法，1表示非常不同意，7表示非常同意：',
+    left: '1 非常不同意', right: '7 非常同意',
+    items: [
+      { key: 'q2_share', label: '我可以与小五分享我的心情。' },
+      { key: 'q2_comfort', label: '小五让我感到慰藉。' },
+      { key: 'q2_care', label: '小五关心我的感受。' },
+      { key: 'q2_decision', label: '小五愿意帮我做出决策。' },
+      { key: 'q2_support', label: '我从小五那里获得了情感上的帮助与支持。' }
+    ]
+  },
+  {
+    title: 'group3',
+    lead: '请对下面陈述表达你的看法，1表示非常不同意，7表示非常同意：',
+    left: '1 非常不同意', right: '7 非常同意',
+    items: [
+      { key: 'q3_self_thought', label: '我认为小五的行为完全是出于它自己的想法。' },
+      { key: 'q3_self_decide', label: '我认为小五的行为是自己决定的。' },
+      { key: 'q3_responsible', label: '我认为小五可以为自己的行为负责。' },
+      { key: 'q3_adjust_behavior', label: '我觉得小五可以调整自己的行为方式。' },
+      { key: 'q3_adjust_decision', label: '我觉得小五可以调整自己的决策或计划。' },
+      { key: 'q3_adjust_willingness', label: '我觉得小五可以调整自己的意愿或意图。' }
+    ]
+  },
+  {
+    title: 'group4',
+    lead: '请对下面陈述表达你的看法，1表示非常不同意，7表示非常同意：',
+    left: '1 非常不同意', right: '7 非常同意',
+    items: [
+      { key: 'satisfaction', label: '你对使用小五智能助手完成这次学习体验感到满意。' },
+      { key: 'helpfulness', label: '你觉得小五智能助手对你有帮助。' },
+      { key: 'willingness_to_continue', label: '你以后愿意继续使用小五智能助手。' },
+      { key: 'willingness_to_recommend', label: '你愿意将小五智能助手推荐给其他人。' }
+    ]
+  }
 ]
-const surveyData = ref({ satisfaction: 0, helpfulness: 0, content_quality: 0, ease_of_use: 0, willingness: 0 })
-const surveyComplete = computed(() => Object.values(surveyData.value).every(v => v >= 1))
+
+const survey1Complete = computed(() => appRating.value >= 1)
+
+const survey2Complete = computed(() => {
+  return surveyData.value.q1_service >= 1 &&
+    surveyData.value.q1_happy >= 1 &&
+    surveyData.value.q1_willingness >= 1 &&
+    surveyData.value.q2_share >= 1 &&
+    surveyData.value.q2_comfort >= 1 &&
+    surveyData.value.q2_care >= 1 &&
+    surveyData.value.q2_decision >= 1 &&
+    surveyData.value.q2_support >= 1 &&
+    surveyData.value.q3_self_thought >= 1 &&
+    surveyData.value.q3_self_decide >= 1 &&
+    surveyData.value.q3_responsible >= 1 &&
+    surveyData.value.q3_adjust_behavior >= 1 &&
+    surveyData.value.q3_adjust_decision >= 1 &&
+    surveyData.value.q3_adjust_willingness >= 1 &&
+    surveyData.value.satisfaction >= 1 &&
+    surveyData.value.helpfulness >= 1 &&
+    surveyData.value.willingness_to_continue >= 1 &&
+    surveyData.value.willingness_to_recommend >= 1
+})
+
+const goToSurvey2 = () => {
+  if (survey1Complete.value) phase.value = 'survey2'
+}
 
 const submitSurvey = async () => {
-  if (!surveyComplete.value || submittingSurvey.value) return
+  if (!survey2Complete.value || submittingSurvey.value) return
   submittingSurvey.value = true
   try {
-    await api.post('/assessment/survey', surveyData.value)
+    const payload = {
+      app_rating: appRating.value,
+      details: {
+        q1_service: surveyData.value.q1_service,
+        q1_happy: surveyData.value.q1_happy,
+        q1_willingness: surveyData.value.q1_willingness,
+        q2_share: surveyData.value.q2_share,
+        q2_comfort: surveyData.value.q2_comfort,
+        q2_care: surveyData.value.q2_care,
+        q2_decision: surveyData.value.q2_decision,
+        q2_support: surveyData.value.q2_support,
+        q3_self_thought: surveyData.value.q3_self_thought,
+        q3_self_decide: surveyData.value.q3_self_decide,
+        q3_responsible: surveyData.value.q3_responsible,
+        q3_adjust_behavior: surveyData.value.q3_adjust_behavior,
+        q3_adjust_decision: surveyData.value.q3_adjust_decision,
+        q3_adjust_willingness: surveyData.value.q3_adjust_willingness,
+        satisfaction: surveyData.value.satisfaction,
+        helpfulness: surveyData.value.helpfulness,
+        willingness_to_continue: surveyData.value.willingness_to_continue,
+        willingness_to_recommend: surveyData.value.willingness_to_recommend
+      }
+    }
+    await api.post('/assessment/survey', payload)
     phase.value = 'instructions'
   } catch (e) {
     toast.error(e.response?.data?.message || '提交失败，请重试')
@@ -364,6 +506,12 @@ onBeforeUnmount(() => {
   box-shadow: var(--shadow);
   padding: 2rem 1.5rem;
   text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.survey-card-long {
+  max-height: 85vh;
+  overflow-y: auto;
 }
 .survey-card h2 {
   font-family: var(--font-display);
@@ -376,44 +524,81 @@ onBeforeUnmount(() => {
   color: var(--ink-muted);
   margin-bottom: 1.5rem;
 }
+.stars-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-bottom: 2rem;
+}
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem;
+  transition: transform 0.15s;
+}
+.star-btn:hover { transform: scale(1.15); }
+.stars-label {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  margin-left: 0.5rem;
+  font-weight: 600;
+}
+.survey-section {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+.section-lead {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 0.8rem;
+  line-height: 1.6;
+  padding: 0.6rem 0.8rem;
+  background: rgba(123, 155, 244, 0.06);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 4px 4px 0;
+}
 .survey-items {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
-  margin-bottom: 1.8rem;
+  gap: 0.9rem;
+  margin-bottom: 0.8rem;
 }
 .survey-item { text-align: left; }
 .item-label {
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 500;
   color: var(--ink);
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.3rem;
+  line-height: 1.4;
 }
-.rating-row {
+.likert-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.3rem;
 }
-.rating-hint {
-  font-size: 0.65rem;
+.likert-hint {
+  font-size: 0.58rem;
   color: var(--ink-faint);
   white-space: nowrap;
-  min-width: 3em;
+  min-width: 2.6em;
 }
-.rating-hint:last-child { text-align: right; }
-.dots {
+.likert-hint:last-child { text-align: right; }
+.likert-dots {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.25rem;
   flex: 1;
   justify-content: center;
 }
-.dot {
-  width: 36px;
-  height: 36px;
+.likert-dot {
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 2px solid var(--border);
   background: var(--surface);
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--ink-muted);
   cursor: pointer;
@@ -422,8 +607,27 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
 }
-.dot:hover { border-color: var(--accent); color: var(--accent); }
-.dot.active { border-color: var(--accent); background: var(--accent); color: white; }
+.likert-dot:hover { border-color: var(--accent); color: var(--accent); }
+.likert-dot.active { border-color: var(--accent); background: var(--accent); color: white; }
+.btn-row {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+.btn-ghost {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  white-space: nowrap;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--ink-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-ghost:hover { border-color: var(--ink-muted); color: var(--ink); }
 
 /* 须知 */
 .instructions-card {

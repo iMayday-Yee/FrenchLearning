@@ -39,25 +39,27 @@ def submit_survey():
     user_id = int(get_jwt_identity())
 
     existing = SurveyResponse.query.filter_by(user_id=user_id).first()
-    if existing:
-        return jsonify({'code': 400, 'message': '问卷已提交过'}), 400
 
     data = request.get_json()
-    fields = ['satisfaction', 'helpfulness', 'content_quality', 'ease_of_use', 'willingness']
-    for f in fields:
-        v = data.get(f)
-        if not v or not (1 <= int(v) <= 5):
-            return jsonify({'code': 400, 'message': f'评分项 {f} 无效'}), 400
 
-    survey = SurveyResponse(
-        user_id=user_id,
-        satisfaction=int(data['satisfaction']),
-        helpfulness=int(data['helpfulness']),
-        content_quality=int(data['content_quality']),
-        ease_of_use=int(data['ease_of_use']),
-        willingness=int(data['willingness'])
-    )
-    db.session.add(survey)
+    app_rating = data.get('app_rating')
+    if not app_rating or not (1 <= int(app_rating) <= 7):
+        return jsonify({'code': 400, 'message': 'app_rating 无效'}), 400
+
+    details = data.get('details', {})
+    if not isinstance(details, dict):
+        return jsonify({'code': 400, 'message': 'details 格式错误'}), 400
+
+    if existing:
+        existing.app_rating = int(app_rating)
+        existing.details = json.dumps(details, ensure_ascii=False)
+    else:
+        survey = SurveyResponse(
+            user_id=user_id,
+            app_rating=int(app_rating),
+            details=json.dumps(details, ensure_ascii=False)
+        )
+        db.session.add(survey)
     db.session.commit()
 
     return jsonify({'code': 200, 'message': '问卷提交成功'})
@@ -88,6 +90,9 @@ def submit_assessment():
     correct_count = 0
     total_count = len(answers)
 
+    # 删除旧答案，重新插入
+    AssessmentAnswer.query.filter_by(user_id=user_id).delete()
+
     for answer in answers:
         french_word = answer.get('french', '')
         user_choice = answer['user_choice']
@@ -107,14 +112,18 @@ def submit_assessment():
         )
         db.session.add(record)
 
-    db.session.commit()
-
-    summary = AssessmentSummary(
-        user_id=user_id,
-        correct_count=correct_count,
-        total_count=total_count
-    )
-    db.session.add(summary)
+    # 更新或插入 summary
+    summary = AssessmentSummary.query.filter_by(user_id=user_id).first()
+    if summary:
+        summary.correct_count = correct_count
+        summary.total_count = total_count
+    else:
+        summary = AssessmentSummary(
+            user_id=user_id,
+            correct_count=correct_count,
+            total_count=total_count
+        )
+        db.session.add(summary)
     db.session.commit()
 
     return jsonify({

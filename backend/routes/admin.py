@@ -204,12 +204,11 @@ def export_survey():
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(['user_id', 'nickname', 'group_type', 'avatar_type',
-                     'satisfaction', 'helpfulness', 'content_quality', 'ease_of_use', 'willingness', 'created_at'])
+                     'app_rating', 'details_json', 'created_at'])
 
     for survey, user in results:
         writer.writerow([user.id, user.nickname, user.group_type, user.avatar_type,
-                         survey.satisfaction, survey.helpfulness, survey.content_quality,
-                         survey.ease_of_use, survey.willingness, survey.created_at])
+                         survey.app_rating, survey.details, survey.created_at])
 
     return Response(output.getvalue(), mimetype='text/csv',
                     headers={'Content-Disposition': 'attachment; filename=survey_export.csv'})

@@ -1,4 +1,4 @@
-"""清空所有数据表内容（保留表结构），重新初始化种子数据"""
+"""清空所有数据表内容（重建有schema变化的表），重新初始化种子数据"""
 import sqlite3
 import os
 
@@ -18,13 +18,20 @@ tables = [row[0] for row in cur.fetchall()]
 print(f'找到 {len(tables)} 张表: {", ".join(tables)}')
 print()
 
+# 需要重建 schema 的表（字段有变化）
+reset_schema_tables = ['survey_responses']
+
 for table in tables:
-    cur.execute(f'SELECT COUNT(*) FROM {table}')
-    count = cur.fetchone()[0]
-    cur.execute(f'DELETE FROM {table}')
-    print(f'  {table}: 删除 {count} 条记录')
+    if table in reset_schema_tables:
+        cur.execute(f'DROP TABLE IF EXISTS {table}')
+        print(f'  {table}: 已删除表（下次启动自动重建）')
+    else:
+        cur.execute(f'SELECT COUNT(*) FROM {table}')
+        count = cur.fetchone()[0]
+        cur.execute(f'DELETE FROM {table}')
+        print(f'  {table}: 删除 {count} 条记录')
 
 conn.commit()
 conn.close()
 
-print('\n所有数据已清空。重启服务后会自动重新初始化种子数据（system_config、group_slots、wechat_accounts）。')
+print('\n所有数据已清空。重启服务后会自动重新初始化种子数据和更新表结构。')

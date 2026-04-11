@@ -83,11 +83,8 @@ class SurveyResponse(db.Model):
     __tablename__ = 'survey_responses'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False)
-    satisfaction = db.Column(db.Integer, nullable=False)       # 学习体验满意度
-    helpfulness = db.Column(db.Integer, nullable=False)        # AI助手帮助程度
-    content_quality = db.Column(db.Integer, nullable=False)    # 学习内容实用性
-    ease_of_use = db.Column(db.Integer, nullable=False)        # 操作界面易用性
-    willingness = db.Column(db.Integer, nullable=False)        # 继续使用意愿
+    app_rating = db.Column(db.Integer, nullable=False, default=0)      # App Store评分 1-5
+    details = db.Column(db.Text, nullable=False, default='{}')          # 所有量表题答案，JSON格式
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class SystemConfig(db.Model):

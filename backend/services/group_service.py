@@ -2,14 +2,19 @@ import random
 from models import GroupSlot, User
 
 def assign_group(db):
-    """为新用户分配组别，保证组别平衡"""
-    available_slots = GroupSlot.query.filter(GroupSlot.current_count < GroupSlot.max_count).all()
-    if not available_slots:
-        raise Exception("所有分组槽位已满")
+    """为新用户分配组别，优先分配到当前人数最少的组（事务保护）"""
+    slots = GroupSlot.query.all()
+    if not slots:
+        raise Exception("分组槽位未初始化")
 
-    chosen = random.choice(available_slots)
+    # 找出当前人数最少的组
+    min_count = min(s.current_count for s in slots)
+    candidates = [s for s in slots if s.current_count == min_count]
+
+    # 从最少人的组中随机选一个
+    chosen = random.choice(candidates)
     chosen.current_count += 1
-    db.session.commit()
+    # 注意：不在这里 commit，调用方负责统一事务
 
     return chosen.group_type, chosen.avatar_type
 
