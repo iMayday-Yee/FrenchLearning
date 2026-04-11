@@ -102,22 +102,20 @@ def send_verification_email(email_address):
 def send_study_reminder(email_address, study_day):
     """发送学习提醒邮件，返回 (success, message)"""
     body_html = f"""
-    <p style="margin:0 0 6px;font-size:13px;color:#7B9BF4;font-weight:600;">📚 法语学习助手 · 来自小五智能助手</p>
-    <p style="margin:0 0 20px;">Bonjour !</p>
-    <p style="margin:0 0 8px;">今天是法语学习的<strong>第 {study_day} 天</strong>，今天的学习内容已经准备好了。</p>
-    <p style="margin:0 0 28px;color:#5E6478;">点击下方按钮开始今天的学习吧！</p>
+    <p style="margin:0 0 6px;font-size:13px;color:#7B9BF4;font-weight:600;">来自小五智能助手</p>
+    <p style="margin:0 0 8px;">今天是测试的第<strong>{study_day}/5</strong>天。</p>
+    <p style="margin:0 0 28px;color:#5E6478;">在你方便的时候，点击下方按钮开始与小五交流法语学习吧！</p>
     <div style="text-align:center;margin:0 0 24px;">
-      <a href="https://xiaowu.quest" style="display:inline-block;padding:12px 36px;background:linear-gradient(135deg,#7B9BF4 0%,#98B2F7 100%);border-radius:10px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">开始学习</a>
+      <a href="https://xiaowu.quest" style="display:inline-block;padding:12px 36px;background:linear-gradient(135deg,#7B9BF4 0%,#98B2F7 100%);border-radius:10px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">开始交流</a>
     </div>
-    <p style="margin:0;color:#9096A6;font-size:13px;">每天坚持一点点，进步看得见。</p>
     """
 
     msg = MIMEMultipart('alternative')
     msg['From'] = Config.SMTP_USER
     msg['To'] = email_address
-    msg['Subject'] = f'法语学习提醒 - 第{study_day}天 | 小五智能助手'
-    msg.attach(MIMEText(f'[法语学习助手 · 来自小五智能助手] 今天是法语学习第{study_day}天，打开 https://xiaowu.quest 开始学习吧！', 'plain', 'utf-8'))
-    msg.attach(MIMEText(_build_html_email(f'第 {study_day} 天学习提醒', body_html), 'html', 'utf-8'))
+    msg['Subject'] = f'第{study_day}天测试提醒'
+    msg.attach(MIMEText(f'[来自小五智能助手] 今天是测试的第{study_day}/5天，打开 https://xiaowu.quest 开始与小五交流法语学习吧！', 'plain', 'utf-8'))
+    msg.attach(MIMEText(_build_html_email(f'第{study_day}天测试提醒', body_html), 'html', 'utf-8'))
 
     try:
         with smtplib.SMTP_SSL(Config.SMTP_SERVER, Config.SMTP_PORT) as server:

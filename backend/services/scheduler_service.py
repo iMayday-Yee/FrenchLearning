@@ -20,6 +20,10 @@ def check_and_send_reminders(app):
         if study_day < 1 or study_day > 12:
             return
 
+        # 第6天起不再发送任何提醒邮件
+        if study_day > 5:
+            return
+
         # 精确到分钟：当前时间对应的 time_slot，如 "22:30"
         now = datetime.now()
         current_slot = f"{now.hour:02d}:{now.minute:02d}"
