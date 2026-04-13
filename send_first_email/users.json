@@ -1,0 +1,45 @@
+{
+    "code": 200,
+    "users": [
+        {
+            "avatar_type": "robot",
+            "created_at": "2026-04-13T00:31:51.759016",
+            "email": "869549883@qq.com",
+            "group_type": "adjustable",
+            "id": 138,
+            "nickname": "\u5e94\u4f73\u4e50",
+            "phone": "13738623069",
+            "wechat_bound": false
+        },
+        {
+            "avatar_type": "human",
+            "created_at": "2026-04-13T00:34:32.324474",
+            "email": "1099845965@qq.com",
+            "group_type": "adjustable",
+            "id": 139,
+            "nickname": "\u738b\u6b23\u5a1f",
+            "phone": "15581737824",
+            "wechat_bound": false
+        },
+        {
+            "avatar_type": "robot",
+            "created_at": "2026-04-13T00:49:30.067870",
+            "email": "156457091@qq.com",
+            "group_type": "low",
+            "id": 140,
+            "nickname": "\u65bd\u543e\u5b89",
+            "phone": "17769203585",
+            "wechat_bound": false
+        },
+        {
+            "avatar_type": "human",
+            "created_at": "2026-04-13T00:54:26.699231",
+            "email": "940603154@qq.com",
+            "group_type": "low",
+            "id": 141,
+            "nickname": "HealingSpring",
+            "phone": "15327523562",
+            "wechat_bound": false
+        }
+    ]
+}
