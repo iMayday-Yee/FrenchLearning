@@ -304,7 +304,7 @@ def upload_audio():
 
     from config import Config
     import time
-    filename = f"{word_index or 0}_{int(time.time())}.webm"
+    filename = f"{word_index or 0}_{int(time.time())}.m4a"
     user_dir = os.path.join(Config.UPLOAD_FOLDER, str(user_id), str(study_day))
     os.makedirs(user_dir, exist_ok=True)
     filepath = os.path.join(user_dir, filename)

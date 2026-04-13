@@ -135,7 +135,7 @@ const sendMessage = async () => {
 const handleRecorded = async (blob, wordIndex) => {
   if (isThinking.value || remainingRounds.value === 0) return
   const formData = new FormData()
-  formData.append('audio', blob, 'recording.webm')
+  formData.append('audio', blob, 'recording.m4a')
   if (wordIndex !== undefined && wordIndex !== null) formData.append('word_index', wordIndex)
 
   chatMessages.value.push({

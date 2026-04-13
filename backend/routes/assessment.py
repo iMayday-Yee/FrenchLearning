@@ -179,7 +179,7 @@ def upload_pronunciation():
         db.session.delete(old)
     db.session.commit()
 
-    filename = f"pron_{word_index}_{int(time.time())}.webm"
+    filename = f"pron_{word_index}_{int(time.time())}.m4a"
     filepath = os.path.join(user_dir, filename)
     audio_file.save(filepath)
 

@@ -403,7 +403,7 @@ const startRecording = async (e) => {
     audioChunks = []
     mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data)
     mediaRecorder.onstop = () => {
-      const blob = new Blob(audioChunks, { type: 'audio/webm' })
+      const blob = new Blob(audioChunks, { type: 'audio/mp4' })
       stream.getTracks().forEach(t => t.stop())
       // 只存本地，覆盖上一次
       pronBlobs[pronIndex.value] = blob
@@ -434,7 +434,7 @@ const uploadCurrentPron = async () => {
   if (!blob) return
   isUploading.value = true
   const formData = new FormData()
-  formData.append('audio', blob, 'pron.webm')
+  formData.append('audio', blob, 'pron.m4a')
   formData.append('word_index', idx)
   formData.append('target_word', pronWords.value[idx].french)
   try {

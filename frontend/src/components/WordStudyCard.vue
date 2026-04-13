@@ -73,7 +73,7 @@ const startRecording = async (e) => {
     audioChunks = []
     mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data)
     mediaRecorder.onstop = () => {
-      const blob = new Blob(audioChunks, { type: 'audio/webm' })
+      const blob = new Blob(audioChunks, { type: 'audio/mp4' })
       emit('recorded', blob, props.data.word_index)
       stream.getTracks().forEach(track => track.stop())
     }
